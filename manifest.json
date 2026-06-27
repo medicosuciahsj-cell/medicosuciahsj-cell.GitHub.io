@@ -1,0 +1,20 @@
+{
+  "name": "UCI Cardio INC",
+  "short_name": "UCI Cardio",
+  "description": "Sistema clínico integrado para UCI de cardiocirugía - INC Paraguay",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1A6FBF",
+  "theme_color": "#1A6FBF",
+  "orientation": "any",
+  "lang": "es",
+  "categories": ["medical", "health"],
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231A6FBF'/><text y='.9em' font-size='72' x='14'>🫀</text></svg>",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

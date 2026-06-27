@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="UCI Cardio"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="theme-color" content="#1A6FBF"/>
+  <title>UCI Cardio INC</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    #root { min-height: 100vh; }
+    .pwa-splash {
+      display: flex; align-items: center; justify-content: center;
+      height: 100vh; background: linear-gradient(135deg, #1A6FBF 0%, #1557A0 100%);
+      flex-direction: column; gap: 16px;
+    }
+    .pwa-splash-icon { font-size: 64px; }
+    .pwa-splash-text { color: #fff; font-family: -apple-system, sans-serif; font-size: 22px; font-weight: 700; letter-spacing: .03em; }
+    .pwa-splash-sub { color: rgba(255,255,255,.65); font-family: -apple-system, sans-serif; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div id="root">
+    <div class="pwa-splash">
+      <div class="pwa-splash-icon">🫀</div>
+      <div class="pwa-splash-text">UCI Cardio INC</div>
+      <div class="pwa-splash-sub">Sistema Clínico · Cargando...</div>
+    </div>
+  </div>
+
+  <!-- React 18 UMD -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <script type="text/babel" data-presets="react">
+    // Extract hooks from global React (UMD build)
+    const { useState, useEffect, useMemo, useCallback, useRef } = React;
+
+
+// ─── THEME ────────────────────────────────────────────────────────────────────
+const C = {
+  bg:"#F2F5FB", panel:"#FFFFFF", card:"#FFFFFF", border:"#DDE3EE",
+  accent:"#1A6FBF", accentL:"#EBF3FC",
+  green:"#1A7A4A", greenL:"#E6F5EE",
+  yellow:"#A85000", yellowL:"#FEF3E2",
+  red:"#B8000F", redL:"#FDEBEC",
+  text:"#18243A", sub:"#4A5568", muted:"#8896B0", mutedL:"#F0F3FA",
+};
+
+const css = `
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@400;500;600;700&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  html{font-size:15px}
+  body{background:${C.bg};color:${C.text};font-family:'Inter',sans-serif;min-height:100vh}
+  input,select,textarea{background:#fff;border:1.5px solid ${C.border};color:${C.text};border-radius:8px;padding:9px 12px;font-family:inherit;font-size:14px;width:100%;transition:border .15s,box-shadow .15s}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:${C.accent};box-shadow:0 0 0 3px ${C.accent}1A}
+  input:disabled{background:${C.mutedL};color:${C.muted};cursor:default}
+  select option{background:#fff}
+  ::-webkit-scrollbar{width:5px;height:5px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:${C.border};border-radius:4px}
+  table{border-collapse:collapse;width:100%}
+  th{background:${C.mutedL};color:${C.muted};font-size:11px;text-transform:uppercase;letter-spacing:.08em;padding:8px 12px;text-align:left;border-bottom:2px solid ${C.border}}
+  td{padding:9px 12px;border-bottom:1px solid ${C.border};font-size:13px;vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:${C.accentL}}
+
+  /* ── TABLET LAYOUT ── */
+  .app-shell{display:flex;flex-direction:column;min-height:100vh}
+  .app-header{background:linear-gradient(135deg,${C.accent} 0%,#1557A0 100%);padding:0 20px;height:54px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 10px rgba(26,111,191,.3);flex-shrink:0;position:sticky;top:0;z-index:100}
+  .app-body{display:flex;flex:1;overflow:hidden}
+  .side-nav{width:200px;background:${C.panel};border-right:1.5px solid ${C.border};display:flex;flex-direction:column;padding:12px 8px;gap:2px;overflow-y:auto;flex-shrink:0}
+  .side-nav-btn{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;border:none;cursor:pointer;font-size:13px;font-weight:600;text-align:left;transition:all .15s;background:transparent;color:${C.muted};width:100%}
+  .side-nav-btn.active{background:${C.accentL};color:${C.accent}}
+  .side-nav-btn:hover:not(.active){background:${C.mutedL};color:${C.sub}}
+  .main-content{flex:1;overflow-y:auto;padding:20px}
+  .content-inner{max-width:900px;margin:0 auto}
+
+  /* ── MOBILE: top nav ── */
+  .top-nav{background:${C.panel};border-bottom:1.5px solid ${C.border};overflow-x:auto;display:flex}
+  .top-nav-btn{background:transparent;border:none;border-bottom:2.5px solid transparent;color:${C.muted};padding:10px 12px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .15s}
+  .top-nav-btn.active{background:${C.accentL};border-bottom-color:${C.accent};color:${C.accent}}
+
+  @media(min-width:768px){.top-nav{display:none}.side-nav{display:flex}}
+  @media(max-width:767px){.side-nav{display:none}.top-nav{display:flex}.app-body{flex-direction:column}.main-content{padding:14px}}
+  @media(max-width:640px){html{font-size:14px}}
+
+  /* ── TABLET GRID ── */
+  .tablet-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:767px){.tablet-grid-2{grid-template-columns:1fr}}
+`;
+
+// ─── STORAGE ─────────────────────────────────────────────────────────────────
+const SK="uci_v6";
+const loadDB=()=>{try{const r=localStorage.getItem(SK);return r?JSON.parse(r):[]}catch{return []}};
+const saveDB=d=>{try{localStorage.setItem(SK,JSON.stringify(d))}catch{}};
+
+// ─── UTILS ───────────────────────────────────────────────────────────────────
+const uid =()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const num =v=>parseFloat(v)||0;
+const fmt =(v,d=2)=>(v==null||isNaN(v))?"—":Number(v).toFixed(d);
+const ts  =()=>new Date().toISOString();
+const fmtTs=s=>new Date(s).toLocaleString("es-PY",{dateStyle:"short",timeStyle:"short"});
+const today=()=>new Date().toISOString().slice(0,10);
+
+// ─── CLINICAL FORMULAS ───────────────────────────────────────────────────────
+const calcMDRD=(cr,age,sex,race)=>{if(!cr||!age)return null;let g=175*Math.pow(num(cr),-1.154)*Math.pow(num(age),-0.203);if(sex==="F")g*=0.742;if(race==="afro")g*=1.212;return g;};
+const calcCG=(cr,age,sex,wt)=>{if(!cr||!age||!wt)return null;let c=((140-num(age))*num(wt))/(72*num(cr));if(sex==="F")c*=0.85;return c;};
+const ckdStage=g=>{if(g==null)return null;if(g>=90)return{label:"G1 — Normal",c:C.green};if(g>=60)return{label:"G2 — Leve",c:C.green};if(g>=45)return{label:"G3a",c:C.yellow};if(g>=30)return{label:"G3b",c:C.yellow};if(g>=15)return{label:"G4 — Grave",c:C.red};return{label:"G5 — Falla renal",c:C.red};};
+const labIdx=(n,l,p)=>{const N=num(n),L=num(l),P=num(p);if(!L)return{sii:null,nlr:null,plr:null};return{sii:(N*P)/L,nlr:N/L,plr:P/L};};
+const calcVIS=f=>num(f.dopaDose)+num(f.dobutaDose)+num(f.milriDose)*15+num(f.norepiDose)*100+num(f.epiDose)*100+num(f.vasopressinDose)*10000;
+const calcSOFA=f=>["sofaResp","sofaCoag","sofaHep","sofaCardio","sofaNeuro","sofaRenal"].reduce((s,k)=>s+num(f[k]),0);
+
+// ─── HEMODYNAMIC / FICK CALCULATIONS ─────────────────────────────────────────
+function calcHemodynamics(g, pt) {
+  const hb   = num(g.hb);
+  const sao2 = num(g.sao2) / 100;
+  const pao2 = num(g.pao2);
+  const scvo2= num(g.scvo2) / 100;
+  const pvo2 = num(g.pvo2);      // PvO2 si disponible
+  const age  = num(pt?.edad);
+  const sc   = num(pt?.sc);
+  const wt   = num(pt?.peso);
+  const sex  = pt?.sexo || "M";
+  const hr   = num(g.hr);        // frecuencia cardíaca opcional
+
+  if (!hb) return null;
+
+  // Contenido arterial de O2 (mL O2/dL)
+  const cao2 = (hb * 1.34 * sao2) + (pao2 * 0.0031);
+
+  // Contenido venoso de O2
+  const cvo2 = scvo2 > 0
+    ? (hb * 1.34 * scvo2) + (pvo2 * 0.0031)
+    : null;
+
+  // Diferencia a-v O2
+  const avdo2 = cvo2 != null ? cao2 - cvo2 : null;
+
+  // VO2 estimado por La Farge & Miettinen (mL/min)
+  let vo2est = null;
+  if (age && wt) {
+    // VO2 index = 138.1 - (11.49 × ln(age)) + (0.378 × HR)  [Lafarge para >3 años]
+    // VO2 (mL/min) = VO2i × SC
+    const lnAge = Math.log(age > 0 ? age : 1);
+    const vo2i_base = sex === "F"
+      ? 138.1 - (17.04 * lnAge) + (0.378 * (hr || 80))
+      : 138.1 - (11.49 * lnAge) + (0.378 * (hr || 80));
+    vo2est = vo2i_base * (sc || Math.sqrt((wt * (num(pt?.talla)||170)) / 3600));
+  }
+
+  // GC por Fick = VO2 / (CaO2 - CvO2) × 10  [resultado en L/min]
+  const gc = (avdo2 && avdo2 > 0 && vo2est)
+    ? (vo2est / (avdo2 * 10))
+    : null;
+
+  // IC = GC / SC
+  const ic = (gc && sc) ? gc / sc : null;
+
+  // DO2 = GC × CaO2 × 10  [mL O2/min]
+  const do2 = gc ? gc * cao2 * 10 : null;
+
+  // DO2 index = DO2 / SC
+  const do2i = (do2 && sc) ? do2 / sc : null;
+
+  // VO2 real = GC × (CaO2-CvO2) × 10
+  const vo2real = (gc && avdo2) ? gc * avdo2 * 10 : null;
+
+  // ERO2 = VO2 / DO2
+  const ero2 = (vo2real && do2 && do2 > 0) ? (vo2real / do2) * 100 : null;
+
+  // Interpretación integrada
+  let perfil = "", perfilColor = C.muted;
+  if (gc !== null) {
+    const icVal = ic || 0;
+    const ero2Val = ero2 || 0;
+    if (icVal >= 2.2 && ero2Val <= 30) { perfil = "✅ Gasto cardíaco adecuado — hemodinámica compensada"; perfilColor = C.green; }
+    else if (icVal < 1.8 && ero2Val > 35) { perfil = "🚨 Bajo gasto severo — extracción de O₂ crítica"; perfilColor = C.red; }
+    else if (icVal < 2.2 && ero2Val > 30) { perfil = "⚠ Bajo gasto moderado — aumentar DO₂ o reducir VO₂"; perfilColor = C.yellow; }
+    else if (icVal >= 2.2 && ero2Val > 35) { perfil = "⚠ GC preservado pero VO₂ elevado — hipermetabolismo"; perfilColor = C.yellow; }
+    else { perfil = "Perfil mixto — evaluar en contexto"; perfilColor = C.yellow; }
+  }
+
+  // Delta PCO2
+  const dpco2 = num(g.pvco2) - num(g.paco2);
+
+  // P/F
+  const pf = pao2 / ((num(g.fio2) || 21) / 100);
+  const pfLabel = pf >= 400 ? "Normal" : pf >= 300 ? "SDRA leve" : pf >= 200 ? "SDRA moderado" : "SDRA severo";
+
+  // Lac clearance
+  const lacClear = g.lacBasal ? ((num(g.lacBasal) - num(g.lactato)) / num(g.lacBasal)) * 100 : null;
+
+  return { cao2, cvo2, avdo2, vo2est, gc, ic, do2, do2i, vo2real, ero2, perfil, perfilColor, dpco2, pf, pfLabel, lacClear };
+}
+
+// ─── GAS INTERPRETATION (basic) ──────────────────────────────────────────────
+const interpretGas=g=>{
+  const lac=num(g.lactato),scvo2=num(g.scvo2);
+  const dPCO2=num(g.pvco2)-num(g.paco2);
+  const pf=num(g.pao2)/((num(g.fio2)||21)/100);
+  const lacClear=g.lacBasal?((num(g.lacBasal)-lac)/num(g.lacBasal))*100:null;
+  let perfil="Datos insuficientes",perfilColor=C.muted;
+  if(g.scvo2&&g.lactato){
+    if(lac<2&&scvo2>=70&&dPCO2<=6){perfil="✅ Perfil hemodinámico adecuado";perfilColor=C.green;}
+    else if(lac>=4&&scvo2<60&&dPCO2>10){perfil="🚨 Bajo gasto — shock cardiogénico probable";perfilColor=C.red;}
+    else if(lac>=2&&scvo2<65&&dPCO2>6){perfil=scvo2<60?"⚠ Shock cardiogénico — ScvO₂ crítica":"⚠ Hipoperfusión — GC borderline";perfilColor=C.red;}
+    else if(lac>=2&&scvo2>=70){perfil="⚠ Hiperlactatemia con ScvO₂ normal — distributivo o tipo B";perfilColor=C.yellow;}
+    else if(dPCO2>10&&scvo2>=70){perfil="⚠ Delta PCO₂ elevado — stasis microcirculatoria";perfilColor=C.yellow;}
+    else{perfil="Perfil mixto — interpretar en contexto";perfilColor=C.yellow;}
+  }
+  const pfLabel=pf>=400?"Normal":pf>=300?"SDRA leve":pf>=200?"SDRA moderado":"SDRA severo (<200)";
+  return{perfil,perfilColor,pf,pfLabel,dPCO2,lacClear};
+};
+
+// ─── DRUG CONFIG ─────────────────────────────────────────────────────────────
+const DRUG_DILS={
+  noradrenalina:[{label:"8 mg/200 mL",mg:8,ml:200},{label:"16 mg/200 mL",mg:16,ml:200},{label:"32 mg/200 mL",mg:32,ml:200}],
+  adrenalina:[{label:"10 mg/200 mL",mg:10,ml:200}],
+  dobutamina:[{label:"1000 mg/250 mL",mg:1000,ml:250}],
+  milrinona:[{label:"20 mg/200 mL",mg:20,ml:200},{label:"40 mg/200 mL",mg:40,ml:200}],
+};
+const DRUG_RANGES={noradrenalina:[0.1,0.3],adrenalina:[0.1,0.3],dobutamina:[5,10],milrinona:[0.375,0.5]};
+const doseColor=(drug,g)=>{const r=DRUG_RANGES[drug];if(!r)return C.green;return g<=r[0]?C.green:g<=r[1]?C.yellow:C.red;};
+const calcDrug=(drug,di,wt,mlh)=>{const d=DRUG_DILS[drug][di];const cml=(d.mg*1000)/d.ml;const cmin=(cml*mlh)/60;return{cml,cmin,gamma:cmin/wt,mgh:(cml*mlh)/1000};};
+const calcInv=(drug,di,wt,g)=>{const d=DRUG_DILS[drug][di];return(g*wt*60)/((d.mg*1000)/d.ml);};
+
+// ─── ATB DB ──────────────────────────────────────────────────────────────────
+const ATB_DB=[
+  {name:"Vancomicina",std:"15-20 mg/kg c/8-12h IV",adj:"TFG<50: espaciar + niveles",th:50},
+  {name:"Meropenem",std:"1-2 g c/8h IV (inf ext 3h)",adj:"TFG 26-50: 1g c/12h · <10: 500mg c/24h",th:50},
+  {name:"Piperacilina/Tazo",std:"4.5 g c/6h IV (inf ext 4h)",adj:"TFG<40: 3.375g c/6h",th:40},
+  {name:"Amikacina",std:"15-20 mg/kg/día IV (dosis única)",adj:"TFG 40-60: c/36h · <20: evitar",th:60},
+  {name:"Gentamicina",std:"5-7 mg/kg/día IV (dosis única)",adj:"TFG<40: c/48h o evitar",th:60},
+  {name:"Colistina",std:"Carga 9 MU · Mant 4.5 MU c/12h IV",adj:"TFG<50: reducir mantenimiento",th:50},
+  {name:"Aztreonam",std:"2 g c/6-8h IV",adj:"TFG<30: 1g c/6-8h",th:30},
+  {name:"Ceftazidima",std:"2 g c/8h IV",adj:"TFG 31-50: 1g c/8h · <15: 500mg c/24h",th:50},
+  {name:"Ceftazidima/Avibactam",std:"2.5 g c/8h IV (inf 2h)",adj:"TFG 31-50: 1.25g c/8h",th:50},
+  {name:"Cefepime",std:"2 g c/8h IV",adj:"TFG<30: 1g c/12h",th:30},
+  {name:"Imipenem/Cilastatina",std:"1 g c/6-8h IV",adj:"TFG<40: 500mg c/6h",th:40},
+  {name:"Ciprofloxacino",std:"400 mg c/8-12h IV",adj:"TFG<30: 200-400mg c/18-24h",th:30},
+  {name:"Linezolid",std:"600 mg c/12h IV/VO",adj:"Sin ajuste renal",th:0},
+  {name:"Daptomicina",std:"6-10 mg/kg/día IV",adj:"TFG<30: c/48h",th:30},
+  {name:"Tigeciclina",std:"Carga 100mg · Mant 50mg c/12h IV",adj:"Sin ajuste renal",th:0},
+  {name:"Fluconazol",std:"400-800 mg/día IV/VO",adj:"TFG<50: reducir 50%",th:50},
+  {name:"Caspofungina",std:"Carga 70mg · Mant 50mg/día IV",adj:"Sin ajuste renal",th:0},
+  {name:"Metronidazol",std:"500 mg c/8h IV",adj:"Sin ajuste renal",th:0},
+  {name:"Trimetoprim/Sulfa",std:"15-20 mg/kg/día TMP c/6-8h",adj:"TFG<30: 50% · <15: evitar",th:30},
+  {name:"Anfotericina B lipo",std:"3-5 mg/kg/día IV",adj:"Nefrotóxico — monitorear Cr diario",th:0},
+];
+
+const SOFA_COMP=[
+  {key:"sofaResp",label:"Respiratorio (PaO₂/FiO₂)",opts:["≥400 (0)","300-399 (1)","200-299 (2)","100-199+VM (3)","<100+VM (4)"]},
+  {key:"sofaCoag",label:"Coagulación (Plaq ×10³)",opts:["≥150 (0)","100-149 (1)","50-99 (2)","20-49 (3)","<20 (4)"]},
+  {key:"sofaHep",label:"Hepático (Bili mg/dL)",opts:["<1.2 (0)","1.2-1.9 (1)","2.0-5.9 (2)","6.0-11.9 (3)","≥12 (4)"]},
+  {key:"sofaCardio",label:"Cardiovascular",opts:["PAM≥70 (0)","PAM<70 (1)","Dopa≤5/Dobuta (2)","Dopa>5/Norepi≤0.1 (3)","Dopa>15/Norepi>0.1 (4)"]},
+  {key:"sofaNeuro",label:"Neurológico (Glasgow)",opts:["15 (0)","13-14 (1)","10-12 (2)","6-9 (3)","<6 (4)"]},
+  {key:"sofaRenal",label:"Renal (Crea mg/dL)",opts:["<1.2 (0)","1.2-1.9 (1)","2.0-3.4 (2)","3.5-4.9 (3)","≥5 (4)"]},
+];
+
+// ─── XLSX ────────────────────────────────────────────────────────────────────
+const SJSRC="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+let xlsxOK=false;
+const loadXLSX=()=>new Promise((res,rej)=>{if(xlsxOK||window.XLSX){xlsxOK=true;return res();}const s=document.createElement("script");s.src=SJSRC;s.onload=()=>{xlsxOK=true;res();};s.onerror=rej;document.head.appendChild(s);});
+
+// ─── UI PRIMITIVES ────────────────────────────────────────────────────────────
+const Btn=({children,onClick,color=C.accent,sm,full,disabled,variant="fill"})=>
+  <button onClick={onClick} disabled={disabled} style={{
+    background:variant==="fill"?color:"transparent",
+    border:variant==="outline"?`1.5px solid ${color}`:"none",
+    color:variant==="fill"?"#fff":color,
+    borderRadius:8,padding:sm?"6px 14px":"10px 20px",
+    fontSize:sm?12:14,fontWeight:600,
+    cursor:disabled?"not-allowed":"pointer",
+    opacity:disabled?0.5:1,width:full?"100%":"auto",
+    transition:"all .15s",whiteSpace:"nowrap",
+    boxShadow:variant==="fill"&&!disabled?`0 2px 6px ${color}40`:"none",
+  }}>{children}</button>;
+
+const Card=({children,title,sub,style,accent})=>
+  <div style={{background:C.card,borderRadius:12,border:`1.5px solid ${C.border}`,boxShadow:"0 2px 10px rgba(0,0,0,.06)",overflow:"hidden",...style,...(accent?{borderLeft:`4px solid ${accent}`}:{})}}>
+    {title&&<div style={{background:C.mutedL,padding:"10px 16px",borderBottom:`1.5px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+      <span style={{fontSize:12,fontWeight:700,textTransform:"uppercase",letterSpacing:".1em",color:C.accent}}>{title}</span>
+      {sub&&<span style={{fontSize:11,color:C.muted}}>{sub}</span>}
+    </div>}
+    <div style={{padding:16}}>{children}</div>
+  </div>;
+
+const Field=({label,children,hint,col2})=>
+  <div style={{marginBottom:12,gridColumn:col2?"1/-1":undefined}}>
+    <label style={{display:"block",fontSize:11,color:C.sub,marginBottom:4,fontWeight:600,textTransform:"uppercase",letterSpacing:".06em"}}>{label}</label>
+    {children}
+    {hint&&<div style={{fontSize:11,color:C.muted,marginTop:3,fontStyle:"italic"}}>{hint}</div>}
+  </div>;
+
+const Grid=({cols=2,children,gap=12})=>
+  <div style={{display:"grid",gridTemplateColumns:`repeat(${cols},1fr)`,gap}}>{children}</div>;
+
+const StatBox=({label,value,unit,color,sub,large})=>
+  <div style={{background:C.mutedL,borderRadius:10,padding:"12px 10px",textAlign:"center",border:`1.5px solid ${C.border}`}}>
+    <div style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:large?28:20,fontWeight:700,color:color||C.accent,lineHeight:1}}>{value}</div>
+    {unit&&<div style={{fontSize:10,color:C.muted,marginTop:3}}>{unit}</div>}
+    <div style={{fontSize:11,color:C.sub,marginTop:4,fontWeight:600,textTransform:"uppercase",letterSpacing:".05em"}}>{label}</div>
+    {sub&&<div style={{fontSize:10,color:C.muted,marginTop:2}}>{sub}</div>}
+  </div>;
+
+const Chip=({color=C.accent,children})=>
+  <span style={{background:`${color}15`,color,border:`1.5px solid ${color}40`,borderRadius:20,padding:"3px 10px",fontSize:11,fontWeight:600,display:"inline-block"}}>{children}</span>;
+
+const Alert=({type,children})=>{
+  const m={danger:{bg:C.redL,b:C.red,c:C.red},warn:{bg:C.yellowL,b:C.yellow,c:C.yellow},ok:{bg:C.greenL,b:C.green,c:C.green},info:{bg:C.accentL,b:C.accent,c:C.accent}};
+  const s=m[type]||m.info;
+  return <div style={{background:s.bg,border:`1.5px solid ${s.b}`,borderRadius:8,padding:"9px 13px",fontSize:13,color:s.c,marginBottom:8,fontWeight:500}}>{children}</div>;
+};
+
+const Divider=({label})=>
+  <div style={{display:"flex",alignItems:"center",gap:8,margin:"14px 0 10px"}}>
+    <div style={{flex:1,height:1,background:C.border}}/>
+    <span style={{fontSize:11,color:C.muted,textTransform:"uppercase",letterSpacing:".08em",fontWeight:600}}>{label}</span>
+    <div style={{flex:1,height:1,background:C.border}}/>
+  </div>;
+
+function PatientBar({p}){
+  if(!p) return null;
+  const ll=p.labs?.[p.labs.length-1]||{};
+  return <div style={{background:C.accentL,border:`1.5px solid ${C.accent}30`,borderRadius:10,padding:"10px 16px",marginBottom:14,display:"flex",flexWrap:"wrap",gap:10,alignItems:"center"}}>
+    <div style={{flex:1,minWidth:200}}>
+      <div style={{fontWeight:700,fontSize:14}}>{p.apellidos}, {p.nombres}</div>
+      <div style={{fontSize:12,color:C.sub,marginTop:2,display:"flex",flexWrap:"wrap",gap:8}}>
+        {p.ci&&<span>CI: {p.ci}</span>}
+        <span>{p.edad}a · {p.sexo}</span>
+        <span style={{color:C.accent,fontWeight:600}}>{p.tipoCirugia}</span>
+        <span>FEVI <strong>{p.fevi||"—"}%</strong></span>
+        <span>Peso <strong style={{color:C.accent}}>{p.peso||"—"} kg</strong></span>
+        {p.sc&&<span>SC <strong>{p.sc} m²</strong></span>}
+        {ll.mdrd&&<span>TFG <strong style={{color:ll.mdrd<30?C.red:ll.mdrd<60?C.yellow:C.green}}>{fmt(ll.mdrd,0)}</strong></span>}
+        {ll.hb&&<span>Hb <strong style={{color:num(ll.hb)<8?C.red:num(ll.hb)<10?C.yellow:C.green}}>{ll.hb}</strong></span>}
+      </div>
+    </div>
+    <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+      {ll.lactato&&<Chip color={num(ll.lactato)>4?C.red:num(ll.lactato)>2?C.yellow:C.green}>Lac {ll.lactato}</Chip>}
+      {ll.creatinina&&<Chip color={num(ll.creatinina)>2?C.red:num(ll.creatinina)>1.2?C.yellow:C.green}>Cr {ll.creatinina}</Chip>}
+    </div>
+  </div>;
+}
+
+function NoPt({onSel}){
+  return <Card><div style={{textAlign:"center",padding:"48px 0",color:C.muted}}>
+    <div style={{fontSize:48,marginBottom:12}}>🏥</div>
+    <div style={{fontSize:15,marginBottom:16,color:C.sub}}>Ningún paciente seleccionado.</div>
+    <Btn onClick={onSel}>Ir a lista de pacientes</Btn>
+  </div></Card>;
+}
+
+// ─── TABS CONFIG ─────────────────────────────────────────────────────────────
+const TABS=[
+  {id:"patients",icon:"📋",label:"Pacientes"},
+  {id:"register",icon:"➕",label:"Ingreso"},
+  {id:"lab",icon:"🧪",label:"Lab"},
+  {id:"gases",icon:"🫁",label:"Gases"},
+  {id:"drugs",icon:"💉",label:"Drogas"},
+  {id:"atb",icon:"💊",label:"ATB"},
+  {id:"balance",icon:"⚖",label:"Balance"},
+  {id:"evolution",icon:"📅",label:"Evolución"},
+  {id:"dashboard",icon:"📊",label:"Dashboard"},
+  {id:"export",icon:"💾",label:"Exportar"},
+];
+
+// ─── ROOT ─────────────────────────────────────────────────────────────────────
+export default function App(){
+  const [tab,setTab]=useState("patients");
+  const [patients,setPatients]=useState(()=>loadDB());
+  const [selId,setSelId]=useState(null);
+  const [editId,setEditId]=useState(null);
+  useEffect(()=>saveDB(patients),[patients]);
+
+  const pt=patients.find(p=>p.id===selId)||null;
+  const upd=useCallback((id,fn)=>setPatients(prev=>prev.map(p=>p.id===id?fn(p):p)),[]);
+  const addPt=useCallback(d=>{
+    const np={...d,id:uid(),labs:[],gases:[],drugLogs:[],atbList:[],balances:[],evolutions:[],createdAt:ts()};
+    setPatients(prev=>[...prev,np]);setSelId(np.id);setEditId(null);setTab("lab");
+  },[]);
+  const saveEdit=useCallback((id,d)=>{setPatients(prev=>prev.map(p=>p.id===id?{...p,...d}:p));setEditId(null);setTab("dashboard");},[]);
+  const delPt=useCallback(id=>{if(!confirm("¿Eliminar paciente?"))return;setPatients(prev=>prev.filter(p=>p.id!==id));if(selId===id)setSelId(null);},[selId]);
+  const goEdit=id=>{setSelId(id);setEditId(id);setTab("register");};
+  const sel=(id,t)=>{setSelId(id);setTab(t);};
+
+  const content=()=>{
+    switch(tab){
+      case"patients": return <PatientsTab pts={patients} onSel={sel} onNew={()=>{setEditId(null);setTab("register");}} onDel={delPt} onEdit={goEdit}/>;
+      case"register": return <RegisterTab existing={editId?patients.find(p=>p.id===editId):null} onSave={editId?d=>saveEdit(editId,d):addPt} onCancel={()=>setTab("patients")}/>;
+      case"lab":      return <LabTab pt={pt} upd={upd} goP={()=>setTab("patients")}/>;
+      case"gases":    return <GasesTab pt={pt} upd={upd} goP={()=>setTab("patients")}/>;
+      case"drugs":    return <DrugsTab pt={pt} upd={upd} goP={()=>setTab("patients")}/>;
+      case"atb":      return <ATBTab pt={pt} upd={upd} goP={()=>setTab("patients")}/>;
+      case"balance":  return <BalanceTab pt={pt} upd={upd} goP={()=>setTab("patients")}/>;
+      case"evolution":return <EvolutionTab pt={pt} upd={upd} goP={()=>setTab("patients")}/>;
+      case"dashboard":return <DashboardTab pt={pt} goP={()=>setTab("patients")} onEdit={()=>goEdit(selId)} onGoTab={t=>setTab(t)}/>;
+      case"export":   return <ExportTab pts={patients} setPts={setPatients}/>;
+      default: return null;
+    }
+  };
+
+  return <>
+    <style>{css}</style>
+    <div className="app-shell">
+      {/* Header */}
+      <div className="app-header">
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <div style={{width:34,height:34,borderRadius:9,background:"rgba(255,255,255,.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>🫀</div>
+          <div>
+            <div style={{fontFamily:"'IBM Plex Mono',monospace",fontWeight:600,fontSize:13,color:"#fff",letterSpacing:".05em"}}>UCI CARDIO INC</div>
+            <div style={{fontSize:10,color:"rgba(255,255,255,.7)"}}>Sistema Clínico · v6 PWA</div>
+          </div>
+        </div>
+        <div style={{marginLeft:"auto",display:"flex",alignItems:"center",gap:10}}>
+          <div style={{width:7,height:7,borderRadius:"50%",background:"#4ADE80",boxShadow:"0 0 0 3px rgba(74,222,128,.3)"}}/>
+          <span style={{fontSize:10,color:"rgba(255,255,255,.8)",fontWeight:500}}>Auto-guardado</span>
+          {pt&&<span style={{fontSize:12,color:"#fff",fontWeight:700,background:"rgba(255,255,255,.15)",padding:"4px 12px",borderRadius:20}}>{pt.apellidos}, {pt.nombres}</span>}
+        </div>
+      </div>
+
+      {/* Mobile top nav */}
+      <div className="top-nav">
+        {TABS.map(t=><button key={t.id} className={`top-nav-btn${tab===t.id?" active":""}`} onClick={()=>setTab(t.id)}>{t.icon} {t.label}</button>)}
+      </div>
+
+      <div className="app-body">
+        {/* Tablet side nav */}
+        <nav className="side-nav">
+          {pt&&<div style={{background:C.accentL,borderRadius:9,padding:"10px 12px",marginBottom:10,border:`1px solid ${C.accent}30`}}>
+            <div style={{fontSize:12,fontWeight:700,color:C.accent,marginBottom:2}}>{pt.apellidos}</div>
+            <div style={{fontSize:11,color:C.sub}}>{pt.edad}a · {pt.tipoCirugia}</div>
+          </div>}
+          {TABS.map(t=><button key={t.id} className={`side-nav-btn${tab===t.id?" active":""}`} onClick={()=>setTab(t.id)}>
+            <span style={{fontSize:16}}>{t.icon}</span>
+            <span>{t.label}</span>
+          </button>)}
+          <div style={{marginTop:"auto",padding:"10px 0",borderTop:`1px solid ${C.border}`,fontSize:10,color:C.muted,textAlign:"center"}}>
+            {patients.length} paciente(s)
+          </div>
+        </nav>
+
+        {/* Main */}
+        <main className="main-content">
+          <div className="content-inner">{content()}</div>
+        </main>
+      </div>
+    </div>
+  </>;
+}
+
+// ─── PATIENTS ─────────────────────────────────────────────────────────────────
+function PatientsTab({pts,onSel,onNew,onDel,onEdit}){
+  const [q,setQ]=useState("");
+  const list=pts.filter(p=>!q||`${p.apellidos} ${p.nombres} ${p.ci}`.toLowerCase().includes(q.toLowerCase()));
+  return <div>
+    <div style={{display:"flex",gap:10,marginBottom:16}}>
+      <input placeholder="🔍 Buscar por nombre o CI..." value={q} onChange={e=>setQ(e.target.value)} style={{flex:1}}/>
+      <Btn onClick={onNew}>+ Nuevo</Btn>
+    </div>
+    {!list.length&&<Card><div style={{textAlign:"center",padding:"40px 0",color:C.muted}}>
+      <div style={{fontSize:44,marginBottom:10}}>🏥</div>
+      <div style={{marginBottom:16,color:C.sub}}>{pts.length?"Sin resultados.":"Sin pacientes registrados."}</div>
+      {!pts.length&&<Btn onClick={onNew}>Registrar primer paciente</Btn>}
+    </div></Card>}
+    <div className="tablet-grid-2">
+      {list.map(p=>{
+        const l0=p.labs?.[0]||{};const idx=labIdx(l0.neutrofilos,l0.linfocitos,l0.plaquetas);
+        return <div key={p.id} style={{background:C.card,border:`1.5px solid ${C.border}`,borderRadius:12,padding:16,boxShadow:"0 2px 8px rgba(0,0,0,.05)"}}>
+          <div style={{fontWeight:700,fontSize:15}}>{p.apellidos}, {p.nombres}</div>
+          <div style={{color:C.sub,fontSize:12,marginTop:3}}>{p.ci&&<span style={{marginRight:8}}>CI: {p.ci}</span>}{p.edad}a · {p.sexo} · <strong style={{color:C.accent}}>{p.tipoCirugia}</strong> · FEVI {p.fevi}%</div>
+          <div style={{display:"flex",gap:5,marginTop:8,flexWrap:"wrap"}}>
+            {p.labs?.length>0&&<Chip>Lab ×{p.labs.length}</Chip>}
+            {p.gases?.length>0&&<Chip>Gases ×{p.gases.length}</Chip>}
+            {p.evolutions?.length>0&&<Chip color={C.green}>Evo ×{p.evolutions.length}</Chip>}
+            {p.atbList?.length>0&&<Chip color={C.yellow}>ATB ×{p.atbList.length}</Chip>}
+            {idx.sii>1000&&<Chip color={C.red}>SII↑</Chip>}
+          </div>
+          <div style={{display:"flex",gap:7,marginTop:12,flexWrap:"wrap",paddingTop:10,borderTop:`1px solid ${C.border}`}}>
+            <Btn sm onClick={()=>onSel(p.id,"dashboard")}>📊 Dashboard</Btn>
+            <Btn sm variant="outline" onClick={()=>onSel(p.id,"lab")}>Lab</Btn>
+            <Btn sm variant="outline" onClick={()=>onSel(p.id,"gases")}>Gases</Btn>
+            <Btn sm variant="outline" color={C.yellow} onClick={()=>onEdit(p.id)}>✏</Btn>
+            <Btn sm variant="outline" color={C.red} onClick={()=>onDel(p.id)}>✕</Btn>
+          </div>
+        </div>;
+      })}
+    </div>
+  </div>;
+}
+
+// ─── REGISTER ────────────────────────────────────────────────────────────────
+const ER={ci:"",apellidos:"",nombres:"",edad:"",sexo:"M",raza:"noafro",tipoCirugia:"CABG",fevi:"",cec:"",clamp:"",uf:"",peso:"",talla:""};
+function RegisterTab({existing,onSave,onCancel}){
+  const [f,setF]=useState(()=>existing?{...ER,...existing}:ER);
+  const h=k=>e=>setF(p=>({...p,[k]:e.target.value}));
+  const sc=useMemo(()=>{const p=num(f.peso),t=num(f.talla);return p&&t?Math.sqrt((p*t)/3600):null;},[f.peso,f.talla]);
+  const isEdit=!!existing;
+  return <div>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+      <div><div style={{fontSize:18,fontWeight:700,color:isEdit?C.yellow:C.accent}}>{isEdit?"✏ Editar paciente":"➕ Nuevo paciente"}</div></div>
+      <Btn sm variant="outline" color={C.muted} onClick={onCancel}>Cancelar</Btn>
+    </div>
+    <div className="tablet-grid-2" style={{gap:14}}>
+      <Card title="Identificación">
+        <Grid cols={2}>
+          <Field label="Cédula de identidad"><input value={f.ci} onChange={h("ci")} placeholder="4.123.456"/></Field>
+          <Field label="Apellidos"><input value={f.apellidos} onChange={h("apellidos")}/></Field>
+          <Field label="Nombres"><input value={f.nombres} onChange={h("nombres")}/></Field>
+          <Field label="Edad (años)"><input type="number" value={f.edad} onChange={h("edad")}/></Field>
+          <Field label="Sexo"><select value={f.sexo} onChange={h("sexo")}><option value="M">Masculino</option><option value="F">Femenino</option></select></Field>
+          <Field label="Raza (MDRD)"><select value={f.raza} onChange={h("raza")}><option value="noafro">No afrodescendiente</option><option value="afro">Afrodescendiente</option></select></Field>
+          <Field label="Tipo de cirugía"><select value={f.tipoCirugia} onChange={h("tipoCirugia")}><option>CABG</option><option>Valvular</option><option>Combinada</option><option>Otra</option></select></Field>
+          <Field label="FEVI (%)"><input type="number" value={f.fevi} onChange={h("fevi")}/></Field>
+        </Grid>
+      </Card>
+      <div style={{display:"flex",flexDirection:"column",gap:14}}>
+        <Card title="Antropometría">
+          <Grid cols={3}>
+            <Field label="Peso (kg)"><input type="number" value={f.peso} onChange={h("peso")}/></Field>
+            <Field label="Talla (cm)"><input type="number" value={f.talla} onChange={h("talla")}/></Field>
+            <Field label="SC (m²)" hint="Mosteller"><input value={sc?sc.toFixed(2):""} disabled/></Field>
+          </Grid>
+        </Card>
+        <Card title="Intraoperatorio">
+          <Grid cols={3}>
+            <Field label="CEC (min)"><input type="number" value={f.cec} onChange={h("cec")}/></Field>
+            <Field label="Clamp Ao (min)"><input type="number" value={f.clamp} onChange={h("clamp")}/></Field>
+            <Field label="UF (mL)"><input type="number" value={f.uf} onChange={h("uf")}/></Field>
+          </Grid>
+        </Card>
+      </div>
+    </div>
+    <div style={{marginTop:14}}><Btn full color={isEdit?C.yellow:C.green} onClick={()=>{if(!f.apellidos.trim()||!f.edad){alert("Apellidos y edad requeridos.");return;}onSave({...f,sc:sc?+sc.toFixed(2):""});}}>
+      {isEdit?"💾 Guardar cambios":"✅ Guardar y continuar → Lab"}
+    </Btn></div>
+  </div>;
+}
+
+// ─── LAB ─────────────────────────────────────────────────────────────────────
+const EL={dia:"Día 0",neutrofilos:"",linfocitos:"",plaquetas:"",hb:"",lactato:"",creatinina:"",troponina:"",bilirrubina:"",glasgow:""};
+function LabTab({pt,upd,goP}){
+  const [f,setF]=useState(EL);
+  if(!pt) return <NoPt onSel={goP}/>;
+  const h=k=>e=>setF(p=>({...p,[k]:e.target.value}));
+  const idx=useMemo(()=>labIdx(f.neutrofilos,f.linfocitos,f.plaquetas),[f.neutrofilos,f.linfocitos,f.plaquetas]);
+  const mdrd=useMemo(()=>calcMDRD(f.creatinina,pt.edad,pt.sexo,pt.raza),[f.creatinina,pt.edad,pt.sexo,pt.raza]);
+  const cg=useMemo(()=>calcCG(f.creatinina,pt.edad,pt.sexo,pt.peso),[f.creatinina,pt.edad,pt.sexo,pt.peso]);
+  const stage=ckdStage(mdrd);
+  const save=()=>{
+    upd(pt.id,p=>({...p,labs:[...(p.labs||[]),{...f,mdrd:mdrd?+mdrd.toFixed(1):null,cg:cg?+cg.toFixed(1):null,savedAt:ts()}]}));
+    setF(prev=>({...EL,dia:prev.dia}));
+  };
+  return <div>
+    <PatientBar p={pt}/>
+    <div className="tablet-grid-2" style={{gap:14,alignItems:"start"}}>
+      <Card title="Nuevo registro de lab" sub={`${pt.labs?.length||0} previos`} accent={C.accent}>
+        <Field label="Día clínico"><select value={f.dia} onChange={h("dia")}>{["Día 0","Día 1","Día 2","Día 3","Día 4","Día 5"].map(d=><option key={d}>{d}</option>)}</select></Field>
+        <Alert type="info">💡 Hemograma dividido por 1000. Ej: Neut 7800 → <strong>7.8</strong> · Plaq 230000 → <strong>230</strong></Alert>
+        <Divider label="Hemograma"/>
+        <Grid cols={2}>
+          <Field label="Neutrófilos (miles/µL)"><input type="number" step="0.1" placeholder="Ej: 7.8" value={f.neutrofilos} onChange={h("neutrofilos")}/></Field>
+          <Field label="Linfocitos (miles/µL)"><input type="number" step="0.1" placeholder="Ej: 1.2" value={f.linfocitos} onChange={h("linfocitos")}/></Field>
+          <Field label="Plaquetas (miles/µL)"><input type="number" placeholder="Ej: 230" value={f.plaquetas} onChange={h("plaquetas")}/></Field>
+          <Field label="Hemoglobina (g/dL)" hint="Necesaria para Fick/DO₂"><input type="number" step="0.1" placeholder="Ej: 12.5" value={f.hb} onChange={h("hb")} style={{borderColor:f.hb?C.green:C.border}}/></Field>
+        </Grid>
+        {(f.neutrofilos||f.linfocitos||f.plaquetas)&&
+          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,marginBottom:10}}>
+            <StatBox label="SII" value={fmt(idx.sii,0)} unit="(N×P)/L" color={idx.sii>1000?C.red:idx.sii>600?C.yellow:C.green}/>
+            <StatBox label="NLR" value={fmt(idx.nlr,2)} unit="N/L" color={idx.nlr>6?C.red:idx.nlr>3?C.yellow:C.green}/>
+            <StatBox label="PLR" value={fmt(idx.plr,0)} unit="P/L" color={idx.plr>200?C.red:idx.plr>150?C.yellow:C.green}/>
+          </div>}
+        <Divider label="Bioquímica"/>
+        <Grid cols={2}>
+          <Field label="Lactato (mmol/L)"><input type="number" step="0.1" value={f.lactato} onChange={h("lactato")}/></Field>
+          <Field label="Creatinina (mg/dL)"><input type="number" step="0.01" value={f.creatinina} onChange={h("creatinina")}/></Field>
+          <Field label="Troponina (ng/mL)"><input type="number" step="0.001" value={f.troponina} onChange={h("troponina")}/></Field>
+          <Field label="Bilirrubina (mg/dL)"><input type="number" step="0.1" value={f.bilirrubina} onChange={h("bilirrubina")}/></Field>
+          <Field label="Glasgow (3-15)" col2><input type="number" min="3" max="15" value={f.glasgow} onChange={h("glasgow")}/></Field>
+        </Grid>
+        {f.hb&&num(f.hb)<8&&<Alert type="danger">Hb crítica {f.hb} g/dL — considerar transfusión</Alert>}
+        {num(f.lactato)>4&&<Alert type="danger">🚨 Lactato crítico {f.lactato} mmol/L</Alert>}
+        {num(f.lactato)>2&&num(f.lactato)<=4&&<Alert type="warn">⚠ Lactato elevado {f.lactato} mmol/L</Alert>}
+        <Btn full color={C.green} onClick={save} style={{marginTop:8}}>➕ Agregar registro</Btn>
+      </Card>
+      <div>
+        {f.creatinina&&<Card title="Función renal" style={{marginBottom:12}} accent={C.yellow}>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
+            <StatBox label="MDRD" value={mdrd?fmt(mdrd,0):"—"} unit="mL/min/1.73m²" color={mdrd&&mdrd<30?C.red:mdrd&&mdrd<60?C.yellow:C.green}/>
+            <StatBox label="Cockcroft-Gault" value={cg?fmt(cg,0):"—"} unit="mL/min" color={cg&&cg<30?C.red:cg&&cg<60?C.yellow:C.green}/>
+          </div>
+          <div style={{textAlign:"center",padding:"6px",background:C.mutedL,borderRadius:8,fontSize:13,fontWeight:600,color:stage?.c||C.muted}}>{stage?.label||"—"}</div>
+          {mdrd&&mdrd<30&&<Alert type="danger" style={{marginTop:8}}>TFG &lt;30 — ajustar ATB nefrotóxicos</Alert>}
+          {mdrd&&mdrd>=30&&mdrd<60&&<Alert type="warn" style={{marginTop:8}}>TFG 30-60 — revisar dosis</Alert>}
+        </Card>}
+        {(pt.labs||[]).length>0&&<Card title="Historial" sub={`${pt.labs.length} registros`}>
+          <div style={{overflowX:"auto"}}><table>
+            <thead><tr><th>Día</th><th>Hb</th><th>Lac</th><th>Cr</th><th>SII</th><th>MDRD</th><th>Hora</th></tr></thead>
+            <tbody>{[...pt.labs].reverse().map((r,i)=>{const ix=labIdx(r.neutrofilos,r.linfocitos,r.plaquetas);return <tr key={i}>
+              <td><Chip color={C.accent}>{r.dia}</Chip></td>
+              <td style={{color:num(r.hb)<8?C.red:num(r.hb)<10?C.yellow:C.text,fontWeight:600}}>{r.hb||"—"}</td>
+              <td style={{color:num(r.lactato)>4?C.red:num(r.lactato)>2?C.yellow:C.text,fontWeight:600}}>{r.lactato||"—"}</td>
+              <td style={{color:num(r.creatinina)>2?C.red:num(r.creatinina)>1.2?C.yellow:C.text}}>{r.creatinina||"—"}</td>
+              <td style={{color:ix.sii>1000?C.red:ix.sii>600?C.yellow:C.text,fontWeight:600}}>{ix.sii?fmt(ix.sii,0):"—"}</td>
+              <td style={{color:r.mdrd&&r.mdrd<30?C.red:r.mdrd&&r.mdrd<60?C.yellow:C.text}}>{r.mdrd?fmt(r.mdrd,0):"—"}</td>
+              <td style={{fontSize:11,color:C.muted}}>{fmtTs(r.savedAt)}</td>
+            </tr>;})}
+            </tbody>
+          </table></div>
+        </Card>}
+      </div>
+    </div>
+  </div>;
+}
+
+// ─── GASES + FICK + HEMODYNAMICS ──────────────────────────────────────────────
+const EG={dia:"Día 0",ph:"",pao2:"",paco2:"",hco3:"",be:"",sao2:"",fio2:"21",pvco2:"",pvo2:"",scvo2:"",lactato:"",lacBasal:"",hr:""};
+function GasesTab({pt,upd,goP}){
+  const [f,setF]=useState(()=>{
+    const l=pt?.labs?.[pt.labs.length-1];
+    return l?.lactato?{...EG,lactato:l.lactato}:EG;
+  });
+  if(!pt) return <NoPt onSel={goP}/>;
+  const h=k=>e=>setF(p=>({...p,[k]:e.target.value}));
+
+  // Get latest Hb from lab
+  const lastLab=pt.labs?.[pt.labs.length-1]||{};
+  const hbFromLab=lastLab.hb||"";
+
+  // Pass hb to gas for calculation
+  const gasWithHb={...f,hb:f.hb||hbFromLab};
+  const hemo=useMemo(()=>calcHemodynamics(gasWithHb,pt),[gasWithHb,pt]);
+  const basicInterp=useMemo(()=>interpretGas(f),[f]);
+  const prevLac=pt.gases?.length?pt.gases[pt.gases.length-1].lactato:"";
+
+  const save=()=>{
+    upd(pt.id,p=>({...p,gases:[...(p.gases||[]),{...gasWithHb,savedAt:ts()}]}));
+    setF(prev=>({...EG,dia:prev.dia}));
+  };
+
+  return <div>
+    <PatientBar p={pt}/>
+    <div className="tablet-grid-2" style={{gap:14,alignItems:"start"}}>
+      {/* Left: inputs */}
+      <div>
+        <Card title="Gasometría arterial" sub={`${pt.gases?.length||0} registros`} style={{marginBottom:12}} accent={C.accent}>
+          <Field label="Día clínico"><select value={f.dia} onChange={h("dia")}>{["Día 0","Día 1","Día 2","Día 3","Día 4","Día 5"].map(d=><option key={d}>{d}</option>)}</select></Field>
+          <Grid cols={3}>
+            <Field label="pH"><input type="number" step="0.01" placeholder="7.40" value={f.ph} onChange={h("ph")}/></Field>
+            <Field label="PaO₂ (mmHg)"><input type="number" value={f.pao2} onChange={h("pao2")}/></Field>
+            <Field label="PaCO₂ (mmHg)"><input type="number" value={f.paco2} onChange={h("paco2")}/></Field>
+            <Field label="HCO₃ (mEq/L)"><input type="number" step="0.1" value={f.hco3} onChange={h("hco3")}/></Field>
+            <Field label="BE (mEq/L)"><input type="number" step="0.1" value={f.be} onChange={h("be")}/></Field>
+            <Field label="SaO₂ (%)"><input type="number" step="0.1" value={f.sao2} onChange={h("sao2")}/></Field>
+            <Field label="FiO₂ (%)" hint="21=aire"><input type="number" value={f.fio2} onChange={h("fio2")}/></Field>
+            <Field label="FC (lpm)" hint="Para VO₂ La Farge"><input type="number" value={f.hr} onChange={h("hr")} placeholder="Ej: 85"/></Field>
+          </Grid>
+          <Divider label="Gasometría venosa central"/>
+          <Grid cols={2}>
+            <Field label="PvCO₂ (mmHg)"><input type="number" placeholder="46" value={f.pvco2} onChange={h("pvco2")}/></Field>
+            <Field label="PvO₂ (mmHg)" hint="Para CvO₂"><input type="number" placeholder="40" value={f.pvo2} onChange={h("pvo2")}/></Field>
+            <Field label="ScvO₂ / SvO₂ (%)" hint="Saturación venosa central"><input type="number" step="0.1" placeholder="70" value={f.scvo2} onChange={h("scvo2")}/></Field>
+          </Grid>
+          <Divider label="Lactato"/>
+          <Grid cols={2}>
+            <Field label="Lactato actual (mmol/L)" hint="Pre-cargado del último lab"><input type="number" step="0.1" value={f.lactato} onChange={h("lactato")}/></Field>
+            <Field label="Lactato previo (mmol/L)" hint={prevLac?`Último: ${prevLac}`:""}><input type="number" step="0.1" value={f.lacBasal} onChange={h("lacBasal")} placeholder={prevLac||""}/></Field>
+          </Grid>
+          <Divider label="Hemoglobina"/>
+          <Field label="Hb (g/dL)" hint={hbFromLab?`Del último lab: ${hbFromLab}`:"Cargala en Lab para auto-rellenar"}>
+            <input type="number" step="0.1" value={f.hb||hbFromLab} onChange={h("hb")} placeholder={hbFromLab||"Ej: 12.5"} style={{borderColor:(f.hb||hbFromLab)?C.green:C.border}}/>
+          </Field>
+          <Btn full color={C.green} onClick={save} style={{marginTop:8}}>➕ Agregar gasometría</Btn>
+        </Card>
+      </div>
+
+      {/* Right: results */}
+      <div>
+        {/* Basic interpretation */}
+        {(f.scvo2||f.lactato)&&<Card title="Perfil hemodinámico" style={{marginBottom:12}} accent={basicInterp.perfilColor}>
+          <div style={{background:basicInterp.perfilColor===C.red?C.redL:basicInterp.perfilColor===C.yellow?C.yellowL:C.greenL,border:`2px solid ${basicInterp.perfilColor}`,borderRadius:10,padding:"12px 14px",marginBottom:10}}>
+            <div style={{fontSize:14,fontWeight:700,color:basicInterp.perfilColor}}>{basicInterp.perfil}</div>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
+            <StatBox label="Delta PCO₂" value={num(f.pvco2)&&num(f.paco2)?fmt(basicInterp.dPCO2,1):"—"} unit="mmHg" color={basicInterp.dPCO2>10?C.red:basicInterp.dPCO2>6?C.yellow:C.green}/>
+            <StatBox label="Lac Clearance" value={basicInterp.lacClear!=null?fmt(basicInterp.lacClear,1):"—"} unit="%" color={basicInterp.lacClear!=null?(basicInterp.lacClear>=10?C.green:C.yellow):C.muted}/>
+            <StatBox label="P/F ratio" value={num(f.fio2)?fmt(basicInterp.pf,0):"—"} color={basicInterp.pf<200?C.red:basicInterp.pf<300?C.yellow:C.green} sub={basicInterp.pfLabel}/>
+          </div>
+          {num(f.ph)<7.35&&<Alert type="warn" style={{marginTop:8}}>pH {f.ph} — Acidemia</Alert>}
+          {num(f.ph)>7.45&&<Alert type="info" style={{marginTop:8}}>pH {f.ph} — Alcalemia</Alert>}
+          {num(f.be)<-4&&<Alert type="warn">BE {f.be} — Acidosis metabólica</Alert>}
+        </Card>}
+
+        {/* FICK HEMODYNAMICS */}
+        {hemo&&<Card title="🫀 Fick — Cálculos hemodinámicos" style={{marginBottom:12}} accent={hemo.perfilColor}>
+          {hemo.gc&&<div style={{background:hemo.perfilColor===C.red?C.redL:hemo.perfilColor===C.yellow?C.yellowL:C.greenL,border:`2px solid ${hemo.perfilColor}`,borderRadius:10,padding:"10px 14px",marginBottom:10}}>
+            <div style={{fontSize:13,fontWeight:700,color:hemo.perfilColor}}>{hemo.perfil}</div>
+          </div>}
+          <Divider label="Contenido de O₂"/>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:10}}>
+            <StatBox label="CaO₂" value={fmt(hemo.cao2,2)} unit="mL O₂/dL" color={C.accent} sub="Contenido arterial"/>
+            <StatBox label="CvO₂" value={hemo.cvo2!=null?fmt(hemo.cvo2,2):"—"} unit="mL O₂/dL" color={C.sub} sub="Contenido venoso"/>
+          </div>
+          {hemo.avdo2!=null&&<div style={{background:C.mutedL,borderRadius:8,padding:"8px 12px",marginBottom:10,display:"flex",justifyContent:"space-between",alignItems:"center",border:`1px solid ${C.border}`}}>
+            <span style={{fontSize:12,color:C.sub,fontWeight:600}}>Diferencia a-v O₂ (CaO₂ - CvO₂)</span>
+            <span style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:18,fontWeight:700,color:hemo.avdo2>6?C.red:hemo.avdo2>4?C.yellow:C.green}}>{fmt(hemo.avdo2,2)} <span style={{fontSize:11}}>mL/dL</span></span>
+          </div>}
+          <Divider label="Gasto cardíaco por Fick"/>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:10}}>
+            <StatBox label="GC (Fick)" value={hemo.gc?fmt(hemo.gc,2):"—"} unit="L/min" large color={hemo.gc&&hemo.gc<3.5?C.red:hemo.gc&&hemo.gc<4.5?C.yellow:C.green} sub={hemo.gc&&hemo.gc<3.5?"Bajo":"Normal"}/>
+            <StatBox label="IC" value={hemo.ic?fmt(hemo.ic,2):"—"} unit="L/min/m²" large color={hemo.ic&&hemo.ic<1.8?C.red:hemo.ic&&hemo.ic<2.2?C.yellow:C.green} sub={hemo.ic?"Normal >2.2":"Sin SC"}/>
+          </div>
+          <Divider label="Entrega y consumo de O₂"/>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:8,marginBottom:10}}>
+            <StatBox label="DO₂" value={hemo.do2?fmt(hemo.do2,0):"—"} unit="mL O₂/min" color={hemo.do2&&hemo.do2<500?C.red:hemo.do2&&hemo.do2<700?C.yellow:C.green} sub="Entrega O₂"/>
+            <StatBox label="DO₂i" value={hemo.do2i?fmt(hemo.do2i,0):"—"} unit="mL/min/m²" color={hemo.do2i&&hemo.do2i<400?C.red:C.green} sub="Índice DO₂ (>450)"/>
+            <StatBox label="VO₂ est." value={hemo.vo2est?fmt(hemo.vo2est,0):"—"} unit="mL O₂/min" color={C.accent} sub="La Farge"/>
+            <StatBox label="VO₂ real" value={hemo.vo2real?fmt(hemo.vo2real,0):"—"} unit="mL O₂/min" color={C.accent} sub="Fick"/>
+          </div>
+          <div style={{background:hemo.ero2>35?C.redL:hemo.ero2>30?C.yellowL:C.greenL,border:`2px solid ${hemo.ero2>35?C.red:hemo.ero2>30?C.yellow:C.green}`,borderRadius:10,padding:"12px 16px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div>
+              <div style={{fontSize:12,fontWeight:700,color:C.sub}}>ERO₂ — Extracción de O₂</div>
+              <div style={{fontSize:11,color:C.muted,marginTop:2}}>Normal: 20-30% · &gt;35% extracción crítica</div>
+            </div>
+            <div style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:28,fontWeight:700,color:hemo.ero2>35?C.red:hemo.ero2>30?C.yellow:C.green}}>{hemo.ero2?fmt(hemo.ero2,1):"—"}<span style={{fontSize:14}}> %</span></div>
+          </div>
+          {hemo.ero2>35&&<Alert type="danger" style={{marginTop:8}}>ERO₂ &gt;35% — extracción crítica, aumentar DO₂</Alert>}
+          {hemo.do2i&&hemo.do2i<450&&<Alert type="warn">DO₂i &lt;450 — entrega de O₂ insuficiente</Alert>}
+          {!hemo.gc&&<Alert type="info" style={{marginTop:8}}>Ingresar ScvO₂ + PvO₂ para calcular GC por Fick</Alert>}
+        </Card>}
+      </div>
+    </div>
+
+    {/* History */}
+    {(pt.gases||[]).length>0&&<Card title="Historial gasométrico" style={{marginTop:14}}>
+      <div style={{overflowX:"auto"}}><table>
+        <thead><tr><th>Día</th><th>pH</th><th>PaO₂</th><th>ScvO₂</th><th>ΔCO₂</th><th>Lac</th><th>P/F</th><th>GC</th><th>DO₂</th><th>ERO₂</th><th>Hora</th></tr></thead>
+        <tbody>{[...pt.gases].reverse().map((g,i)=>{
+          const ip=interpretGas(g);
+          const hb2=g.hb||pt.labs?.[pt.labs.length-1]?.hb||"";
+          const hm=hb2?calcHemodynamics({...g,hb:hb2},pt):null;
+          return <tr key={i}>
+            <td><Chip color={C.accent}>{g.dia}</Chip></td>
+            <td style={{color:num(g.ph)<7.35?C.yellow:num(g.ph)>7.45?C.accent:C.text}}>{g.ph||"—"}</td>
+            <td>{g.pao2||"—"}</td>
+            <td style={{color:num(g.scvo2)<60?C.red:num(g.scvo2)<70?C.yellow:C.text,fontWeight:600}}>{g.scvo2||"—"}</td>
+            <td style={{color:ip.dPCO2>10?C.red:ip.dPCO2>6?C.yellow:C.text,fontWeight:600}}>{num(g.pvco2)&&num(g.paco2)?fmt(ip.dPCO2,1):"—"}</td>
+            <td style={{color:num(g.lactato)>4?C.red:num(g.lactato)>2?C.yellow:C.text,fontWeight:600}}>{g.lactato||"—"}</td>
+            <td style={{color:ip.pf<200?C.red:ip.pf<300?C.yellow:C.text}}>{num(g.fio2)?fmt(ip.pf,0):"—"}</td>
+            <td style={{color:hm?.gc&&hm.gc<3.5?C.red:hm?.gc&&hm.gc<4.5?C.yellow:C.text,fontWeight:600}}>{hm?.gc?fmt(hm.gc,1):"—"}</td>
+            <td style={{color:hm?.do2&&hm.do2<500?C.red:C.text}}>{hm?.do2?fmt(hm.do2,0):"—"}</td>
+            <td style={{color:hm?.ero2>35?C.red:hm?.ero2>30?C.yellow:C.text,fontWeight:600}}>{hm?.ero2?fmt(hm.ero2,1)+"%":"—"}</td>
+            <td style={{fontSize:11,color:C.muted}}>{fmtTs(g.savedAt)}</td>
+          </tr>;
+        })}
+        </tbody>
+      </table></div>
+    </Card>}
+  </div>;
+}
+
+// ─── DRUGS ───────────────────────────────────────────────────────────────────
+function DrugsTab({pt,upd,goP}){
+  const [drug,setDrug]=useState("noradrenalina");
+  const [di,setDi]=useState(0);
+  const [mlh,setMlh]=useState("");
+  const [gT,setGT]=useState("");
+  const [mode,setMode]=useState("forward");
+  const [nota,setNota]=useState("");
+  if(!pt) return <NoPt onSel={goP}/>;
+  const wt=num(pt.peso)||70;
+  const dil=DRUG_DILS[drug][di];
+  const cml=(dil.mg*1000)/dil.ml;
+  const fwd=mode==="forward"&&num(mlh)?calcDrug(drug,di,wt,num(mlh)):null;
+  const invMLH=mode==="inverse"&&num(gT)?calcInv(drug,di,wt,num(gT)):null;
+  const dc=fwd?doseColor(drug,fwd.gamma):invMLH?doseColor(drug,num(gT)):null;
+  const save=()=>{
+    const gamma=fwd?fwd.gamma:num(gT);const speed=fwd?num(mlh):invMLH;if(!speed)return;
+    upd(pt.id,p=>({...p,drugLogs:[...(p.drugLogs||[]),{id:uid(),drug,dilution:dil.label,mlh:+speed.toFixed(2),gamma:+gamma.toFixed(4),weight:wt,nota,savedAt:ts()}]}));
+    setMlh("");setGT("");setNota("");
+  };
+  return <div>
+    <PatientBar p={pt}/>
+    <div className="tablet-grid-2" style={{gap:14,alignItems:"start"}}>
+      <Card title="Calculadora vasoactivos" sub={`Peso: ${pt.peso||"—"} kg`} accent={C.accent}>
+        <Grid cols={2}>
+          <Field label="Fármaco"><select value={drug} onChange={e=>{setDrug(e.target.value);setDi(0);}}>{Object.keys(DRUG_DILS).map(d=><option key={d} value={d}>{d.charAt(0).toUpperCase()+d.slice(1)}</option>)}</select></Field>
+          <Field label="Dilución"><select value={di} onChange={e=>setDi(Number(e.target.value))}>{DRUG_DILS[drug].map((d,i)=><option key={i} value={i}>{d.label}</option>)}</select></Field>
+        </Grid>
+        <div style={{background:C.accentL,border:`1.5px solid ${C.accent}40`,borderRadius:8,padding:"10px 14px",marginBottom:12,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <span style={{fontSize:12,color:C.sub,fontWeight:600}}>Concentración</span>
+          <span style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:20,color:C.accent,fontWeight:700}}>{fmt(cml,2)} <span style={{fontSize:12}}>mcg/mL</span></span>
+        </div>
+        <div style={{display:"flex",gap:8,marginBottom:12}}>
+          {["forward","inverse"].map(m=><button key={m} onClick={()=>setMode(m)} style={{flex:1,padding:"9px",borderRadius:8,fontSize:12,fontWeight:600,cursor:"pointer",background:mode===m?C.accent:"transparent",border:`1.5px solid ${mode===m?C.accent:C.border}`,color:mode===m?"#fff":C.muted,transition:"all .15s"}}>{m==="forward"?"mL/h → γ":"γ → mL/h"}</button>)}
+        </div>
+        <Grid cols={2}>
+          <Field label="Peso (kg)"><input value={`${pt.peso||wt} kg`} disabled/></Field>
+          {mode==="forward"?<Field label="mL/h"><input type="number" step="0.1" value={mlh} onChange={e=>setMlh(e.target.value)} autoFocus/></Field>:<Field label="Dosis objetivo (mcg/kg/min)"><input type="number" step="0.001" value={gT} onChange={e=>setGT(e.target.value)} autoFocus/></Field>}
+        </Grid>
+        {fwd&&<><div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:8,margin:"10px 0"}}>
+          <StatBox label="γ mcg/kg/min" value={fmt(fwd.gamma,4)} large color={doseColor(drug,fwd.gamma)}/>
+          <StatBox label="mcg/min" value={fmt(fwd.cmin,2)}/>
+          <StatBox label="mg/h" value={fmt(fwd.mgh,3)}/>
+          <StatBox label="mcg/mL" value={fmt(fwd.cml,2)}/>
+        </div></>}
+        {mode==="inverse"&&invMLH!=null&&<StatBox label="Velocidad necesaria" value={fmt(invMLH,2)} unit="mL/h" large color={doseColor(drug,num(gT))}/>}
+        {dc&&<Alert type={dc===C.green?"ok":dc===C.yellow?"warn":"danger"} style={{marginTop:8}}>
+          {dc===C.green?"✅ Dosis normal":dc===C.yellow?"⚠ Dosis intermedia":"🚨 Dosis alta"}
+          {fwd?` — ${fmt(fwd.gamma,4)} mcg/kg/min`:` — Para ${gT} → ${fmt(invMLH,2)} mL/h`}
+        </Alert>}
+        <Field label="Nota clínica" hint="Opcional"><input value={nota} onChange={e=>setNota(e.target.value)} placeholder="Ej: Post-CEC, PAM 55 mmHg"/></Field>
+        <Btn full color={C.green} onClick={save} disabled={!fwd&&invMLH==null}>➕ Registrar</Btn>
+      </Card>
+      {(pt.drugLogs||[]).length>0&&<Card title="Historial acumulativo" sub={`${pt.drugLogs.length} registros`}>
+        <div style={{overflowX:"auto"}}><table>
+          <thead><tr><th>Fármaco</th><th>mL/h</th><th>γ</th><th>Nota</th><th>Hora</th></tr></thead>
+          <tbody>{[...pt.drugLogs].reverse().map(s=><tr key={s.id}>
+            <td style={{color:C.accent,fontWeight:700,textTransform:"capitalize"}}>{s.drug}</td>
+            <td style={{fontFamily:"'IBM Plex Mono',monospace"}}>{fmt(s.mlh,2)}</td>
+            <td style={{fontFamily:"'IBM Plex Mono',monospace",color:doseColor(s.drug,s.gamma),fontWeight:700}}>{fmt(s.gamma,4)}</td>
+            <td style={{fontSize:11,color:C.sub}}>{s.nota||"—"}</td>
+            <td style={{fontSize:11,color:C.muted}}>{fmtTs(s.savedAt)}</td>
+          </tr>)}
+          </tbody>
+        </table></div>
+      </Card>}
+    </div>
+  </div>;
+}
+
+// ─── ATB ─────────────────────────────────────────────────────────────────────
+function ATBTab({pt,upd,goP}){
+  const [sel,setSel]=useState(ATB_DB[0].name);
+  const [startDay,setStartDay]=useState("Día 0");
+  const [nota,setNota]=useState("");
+  if(!pt) return <NoPt onSel={goP}/>;
+  const info=ATB_DB.find(a=>a.name===sel)||ATB_DB[0];
+  const lastLab=pt.labs?.length?pt.labs[pt.labs.length-1]:null;
+  const tfg=lastLab?.mdrd||lastLab?.cg||null;
+  const needsAdj=tfg!=null&&tfg<info.th&&info.th>0;
+  const add=()=>{upd(pt.id,p=>({...p,atbList:[...(p.atbList||[]),{id:uid(),name:sel,std:info.std,adj:info.adj,startDay,tfg,needsAdj,nota,addedAt:ts()}]}));setNota("");};
+  const remove=id=>upd(pt.id,p=>({...p,atbList:(p.atbList||[]).filter(a=>a.id!==id)}));
+  return <div>
+    <PatientBar p={pt}/>
+    <div className="tablet-grid-2" style={{gap:14,alignItems:"start"}}>
+      <Card title="Agregar ATB — Sanford" accent={C.accent}>
+        {tfg&&<div style={{background:C.accentL,border:`1.5px solid ${C.accent}40`,borderRadius:8,padding:"10px 14px",marginBottom:12,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <span style={{fontSize:12,color:C.sub,fontWeight:600}}>TFG del paciente</span>
+          <span style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:18,color:tfg<30?C.red:tfg<60?C.yellow:C.green,fontWeight:700}}>{fmt(tfg,0)} mL/min</span>
+        </div>}
+        <Field label="Antibiótico"><select value={sel} onChange={e=>setSel(e.target.value)}>{ATB_DB.map(a=><option key={a.name} value={a.name}>{a.name}</option>)}</select></Field>
+        <div style={{background:C.mutedL,borderRadius:9,padding:14,marginBottom:12,border:`1.5px solid ${C.border}`}}>
+          <div style={{fontSize:11,color:C.muted,marginBottom:4,fontWeight:600,textTransform:"uppercase"}}>Dosis estándar</div>
+          <div style={{fontSize:14,color:C.text,fontWeight:600,marginBottom:8}}>{info.std}</div>
+          <div style={{fontSize:11,color:C.sub,paddingTop:8,borderTop:`1px solid ${C.border}`}}>{info.adj}</div>
+        </div>
+        {needsAdj&&<Alert type="danger">⚠ TFG {fmt(tfg,0)} mL/min — AJUSTE RENAL: {info.adj}</Alert>}
+        {!needsAdj&&tfg&&info.th>0&&<Alert type="ok">TFG adecuada — sin ajuste para este ATB</Alert>}
+        {info.th===0&&<Alert type="info">Sin ajuste renal requerido</Alert>}
+        <Grid cols={2}>
+          <Field label="Día de inicio"><select value={startDay} onChange={e=>setStartDay(e.target.value)}>{["Día 0","Día 1","Día 2","Día 3","Día 4","Día 5"].map(d=><option key={d}>{d}</option>)}</select></Field>
+          <Field label="Indicación / cultivo"><input value={nota} onChange={e=>setNota(e.target.value)} placeholder="Ej: hemocultivo +"/></Field>
+        </Grid>
+        <Btn full color={C.green} onClick={add}>➕ Agregar al esquema</Btn>
+      </Card>
+      {(pt.atbList||[]).length>0&&<Card title={`Esquema ATB activo — ${pt.atbList.length} fármaco(s)`} accent={C.yellow}>
+        {pt.atbList.map(a=><div key={a.id} style={{background:C.mutedL,borderRadius:9,padding:12,marginBottom:8,border:`1.5px solid ${C.border}`}}>
+          <div style={{display:"flex",justifyContent:"space-between",gap:8}}>
+            <div style={{flex:1}}>
+              <div style={{fontWeight:700,color:C.accent,fontSize:14}}>{a.name}</div>
+              <div style={{fontSize:12,color:C.text,marginTop:2,fontWeight:500}}>{a.std}</div>
+              <div style={{fontSize:11,color:C.muted,marginTop:3}}>Inicio: {a.startDay} · {new Date(a.addedAt).toLocaleDateString()}</div>
+              {a.nota&&<div style={{fontSize:12,color:C.yellow,marginTop:3}}>📝 {a.nota}</div>}
+              {a.needsAdj&&<div style={{fontSize:11,color:C.red,marginTop:3,fontWeight:600}}>⚠ Ajuste renal (TFG {fmt(a.tfg,0)} mL/min)</div>}
+            </div>
+            <Btn sm variant="outline" color={C.red} onClick={()=>remove(a.id)}>✕</Btn>
+          </div>
+        </div>)}
+      </Card>}
+    </div>
+  </div>;
+}
+
+// ─── BALANCE ─────────────────────────────────────────────────────────────────
+const EB={dia:"Día 0",ingCristaloides:"",ingColoides:"",ingGR:"",ingPFC:"",ingPlaq:"",ingNutricionE:"",ingNutricionP:"",ingMed:"",ingOral:"",egrDiuresis:"",egrMed:"",egrPleural:"",egrSNG:"",egrOtros:"",notasBal:""};
+function BalanceTab({pt,upd,goP}){
+  const [f,setF]=useState(EB);
+  if(!pt) return <NoPt onSel={goP}/>;
+  const h=k=>e=>setF(p=>({...p,[k]:e.target.value}));
+  const totalIng=useMemo(()=>["ingCristaloides","ingColoides","ingGR","ingPFC","ingPlaq","ingNutricionE","ingNutricionP","ingMed","ingOral"].reduce((s,k)=>s+num(f[k]),0),[f]);
+  const insens=num(pt.peso)*8;
+  const totalEgr=useMemo(()=>["egrDiuresis","egrMed","egrPleural","egrSNG","egrOtros"].reduce((s,k)=>s+num(f[k]),0)+insens,[f,insens]);
+  const balance=totalIng-totalEgr;
+  const acum=useMemo(()=>(pt.balances||[]).reduce((s,b)=>s+(b.balance||0),0),[pt.balances]);
+  const save=()=>{upd(pt.id,p=>({...p,balances:[...(p.balances||[]),{...f,totalIng,totalEgr,insens,balance,savedAt:ts()}]}));setF(prev=>({...EB,dia:prev.dia}));};
+  return <div>
+    <PatientBar p={pt}/>
+    <div className="tablet-grid-2" style={{gap:14,alignItems:"start"}}>
+      <div>
+        <Card title="Balance 24h" sub={`Acumulado: ${acum>=0?"+":""}${Math.round(acum)} mL`} style={{marginBottom:14}} accent={C.accent}>
+          <Field label="Día clínico"><select value={f.dia} onChange={h("dia")}>{["Día 0","Día 1","Día 2","Día 3","Día 4","Día 5"].map(d=><option key={d}>{d}</option>)}</select></Field>
+          <Divider label="Ingresos"/>
+          <Grid cols={2}>
+            <Field label="Cristaloides (mL)"><input type="number" value={f.ingCristaloides} onChange={h("ingCristaloides")}/></Field>
+            <Field label="Coloides (mL)"><input type="number" value={f.ingColoides} onChange={h("ingColoides")}/></Field>
+            <Field label="Glóbulos rojos (mL)"><input type="number" value={f.ingGR} onChange={h("ingGR")}/></Field>
+            <Field label="PFC (mL)"><input type="number" value={f.ingPFC} onChange={h("ingPFC")}/></Field>
+            <Field label="Plaquetas (mL)"><input type="number" value={f.ingPlaq} onChange={h("ingPlaq")}/></Field>
+            <Field label="Nutrición enteral (mL)"><input type="number" value={f.ingNutricionE} onChange={h("ingNutricionE")}/></Field>
+            <Field label="Nutrición parenteral (mL)"><input type="number" value={f.ingNutricionP} onChange={h("ingNutricionP")}/></Field>
+            <Field label="Medicamentos IV (mL)"><input type="number" value={f.ingMed} onChange={h("ingMed")}/></Field>
+            <Field label="Vía oral (mL)" col2><input type="number" value={f.ingOral} onChange={h("ingOral")}/></Field>
+          </Grid>
+          <div style={{background:C.greenL,border:`1.5px solid ${C.green}`,borderRadius:8,padding:"10px 14px",marginBottom:8,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <span style={{fontSize:13,color:C.green,fontWeight:700}}>Total ingresos</span>
+            <span style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:20,color:C.green,fontWeight:700}}>{totalIng.toLocaleString()} mL</span>
+          </div>
+          <Divider label="Egresos"/>
+          <Grid cols={2}>
+            <Field label="Diuresis (mL)"><input type="number" value={f.egrDiuresis} onChange={h("egrDiuresis")}/></Field>
+            <Field label="Drenaje mediastinal (mL)"><input type="number" value={f.egrMed} onChange={h("egrMed")}/></Field>
+            <Field label="Drenaje pleural (mL)"><input type="number" value={f.egrPleural} onChange={h("egrPleural")}/></Field>
+            <Field label="SNG / gástrico (mL)"><input type="number" value={f.egrSNG} onChange={h("egrSNG")}/></Field>
+            <Field label="Otros (mL)" col2><input type="number" value={f.egrOtros} onChange={h("egrOtros")}/></Field>
+          </Grid>
+          <div style={{background:C.mutedL,borderRadius:7,padding:"8px 12px",marginBottom:8,display:"flex",justifyContent:"space-between",fontSize:12,border:`1px solid ${C.border}`}}>
+            <span style={{color:C.muted}}>Pérdidas insensibles (8 mL/kg × {pt.peso||"?"})</span>
+            <span style={{color:C.muted,fontFamily:"'IBM Plex Mono',monospace"}}>{insens} mL</span>
+          </div>
+          <div style={{background:C.redL,border:`1.5px solid ${C.red}`,borderRadius:8,padding:"10px 14px",marginBottom:12,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <span style={{fontSize:13,color:C.red,fontWeight:700}}>Total egresos</span>
+            <span style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:20,color:C.red,fontWeight:700}}>{Math.round(totalEgr).toLocaleString()} mL</span>
+          </div>
+          <Field label="Notas"><textarea value={f.notasBal} onChange={h("notasBal")} rows={2} style={{resize:"vertical"}}/></Field>
+          <Btn full color={C.green} onClick={save}>➕ Registrar balance</Btn>
+        </Card>
+      </div>
+      <div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
+          <StatBox label={`Balance ${f.dia}`} value={`${balance>=0?"+":""}${Math.round(balance)}`} unit="mL" large color={balance>1000?C.yellow:balance<-500?C.red:C.green}/>
+          <StatBox label="Balance acumulado" value={`${acum>=0?"+":""}${Math.round(acum)}`} unit="mL" large color={acum>2000?C.red:acum>500?C.yellow:C.green}/>
+        </div>
+        {balance>1000&&<Alert type="warn">Balance positivo &gt;1L — vigilar sobrecarga</Alert>}
+        {acum>2000&&<Alert type="danger">Balance acumulado &gt;2L</Alert>}
+        {(pt.balances||[]).length>0&&<Card title="Historial" sub={`${pt.balances.length} registros`}>
+          <div style={{overflowX:"auto"}}><table>
+            <thead><tr><th>Día</th><th>Ing.</th><th>Egr.</th><th>Balance</th><th>Fecha</th></tr></thead>
+            <tbody>{[...pt.balances].reverse().map((b,i)=><tr key={i}>
+              <td><Chip color={C.accent}>{b.dia}</Chip></td>
+              <td style={{color:C.green,fontFamily:"'IBM Plex Mono',monospace"}}>{Math.round(b.totalIng).toLocaleString()}</td>
+              <td style={{color:C.red,fontFamily:"'IBM Plex Mono',monospace"}}>{Math.round(b.totalEgr).toLocaleString()}</td>
+              <td style={{fontFamily:"'IBM Plex Mono',monospace",fontWeight:700,color:b.balance>1000?C.yellow:b.balance<-500?C.red:C.green}}>{b.balance>=0?"+":""}{Math.round(b.balance).toLocaleString()}</td>
+              <td style={{fontSize:11,color:C.muted}}>{fmtTs(b.savedAt)}</td>
+            </tr>)}
+            </tbody>
+          </table></div>
+        </Card>}
+      </div>
+    </div>
+  </div>;
+}
+
+// ─── EVOLUTION ───────────────────────────────────────────────────────────────
+const EEV={dia:"Día 0",lactato:"",troponina:"",creatinina:"",diuresis:"",map:"",vm:"No",vasopresores:"No",norepiDose:"",epiDose:"",dobutaDose:"",milriDose:"",vasopressinDose:"",dopaDose:"",sofaResp:"0",sofaCoag:"0",sofaHep:"0",sofaCardio:"0",sofaNeuro:"0",sofaRenal:"0",notas:""};
+const nameMap={noradrenalina:"norepiDose",adrenalina:"epiDose",dobutamina:"dobutaDose",milrinona:"milriDose",vasopresina:"vasopressinDose",dopamina:"dopaDose"};
+function latestDoses(dl){const m={norepiDose:"",epiDose:"",dobutaDose:"",milriDose:"",vasopressinDose:"",dopaDose:""};if(!dl?.length)return m;[...dl].reverse().forEach(l=>{const k=nameMap[l.drug];if(k&&!m[k])m[k]=String(l.gamma);});return m;}
+function EvolutionTab({pt,upd,goP}){
+  const build=useCallback(()=>{const l=pt?.labs?.[pt.labs.length-1]||{};const doses=latestDoses(pt?.drugLogs);const hasDoses=Object.values(doses).some(v=>v);return{...EEV,lactato:l.lactato||"",creatinina:l.creatinina||"",troponina:l.troponina||"",...doses,vasopresores:hasDoses?"Sí":"No"};},[pt]);
+  const [f,setF]=useState(build);
+  if(!pt) return <NoPt onSel={goP}/>;
+  const h=k=>e=>setF(p=>({...p,[k]:e.target.value}));
+  const vis=calcVIS(f);const sofa=calcSOFA(f);
+  const save=()=>{upd(pt.id,p=>({...p,evolutions:[...(p.evolutions||[]),{...f,vis,sofa,savedAt:ts()}]}));setF(prev=>({...prev,lactato:"",troponina:"",creatinina:"",diuresis:"",map:"",notas:""}));};
+  return <div>
+    <PatientBar p={pt}/>
+    <Alert type="info">💡 Drogas precargadas del historial · Lab prellenado del último registro · Editá solo lo que cambió</Alert>
+    <div className="tablet-grid-2" style={{gap:14,alignItems:"start"}}>
+      <div>
+        <Card title="Nueva evolución" sub={`${pt.evolutions?.length||0} anteriores`} style={{marginBottom:12}} accent={C.accent}>
+          <Field label="Día clínico"><select value={f.dia} onChange={h("dia")}>{["Día 0","Día 1","Día 2","Día 3","Día 4","Día 5"].map(d=><option key={d}>{d}</option>)}</select></Field>
+          <Divider label="Parámetros clínicos"/>
+          <Grid cols={2}>
+            <Field label="Lactato (mmol/L)"><input type="number" step="0.1" value={f.lactato} onChange={h("lactato")}/></Field>
+            <Field label="Troponina (ng/mL)"><input type="number" step="0.001" value={f.troponina} onChange={h("troponina")}/></Field>
+            <Field label="Creatinina (mg/dL)"><input type="number" step="0.01" value={f.creatinina} onChange={h("creatinina")}/></Field>
+            <Field label="Diuresis (mL/24h)"><input type="number" value={f.diuresis} onChange={h("diuresis")}/></Field>
+            <Field label="PAM (mmHg)" col2><input type="number" value={f.map} onChange={h("map")}/></Field>
+          </Grid>
+          {num(f.lactato)>4&&<Alert type="danger">🚨 Lactato crítico</Alert>}
+          {num(f.map)>0&&num(f.map)<65&&<Alert type="warn">⚠ PAM &lt;65 mmHg</Alert>}
+          <Divider label="Soporte"/>
+          <Grid cols={2}>
+            <Field label="Ventilación"><select value={f.vm} onChange={h("vm")}><option>No</option><option>VM invasiva (IOT)</option><option>VMNI</option><option>OAF</option></select></Field>
+            <Field label="Vasopresores"><select value={f.vasopresores} onChange={h("vasopresores")}><option>No</option><option>Sí</option></select></Field>
+          </Grid>
+          {f.vasopresores==="Sí"&&<>
+            <Alert type="warn">✏ Precargado del último cálculo — editá si cambió</Alert>
+            <Grid cols={2}>
+              {[["norepiDose","Norepinefrina","0.001"],["epiDose","Adrenalina","0.001"],["dobutaDose","Dobutamina","0.1"],["milriDose","Milrinona","0.001"],["vasopressinDose","Vasopresina (U/min)","0.001"],["dopaDose","Dopamina","0.1"]].map(([k,lbl,step])=>
+                <Field key={k} label={`${lbl}`} hint={f[k]?"Precargado":""}>
+                  <input type="number" step={step} value={f[k]} onChange={h(k)} style={{borderColor:f[k]?C.yellow:C.border,borderWidth:f[k]?"2px":"1.5px"}}/>
+                </Field>)}
+            </Grid>
+          </>}
+          <Field label="Notas"><textarea value={f.notas} onChange={h("notas")} rows={2} style={{resize:"vertical"}}/></Field>
+          <Btn full color={C.green} onClick={save} style={{marginTop:8}}>➕ Registrar evolución</Btn>
+        </Card>
+      </div>
+      <div>
+        <Card title="Scores" style={{marginBottom:12}} accent={C.green}>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
+            <StatBox label="VIS Score" value={fmt(vis,1)} large color={vis>40?C.red:vis>20?C.yellow:C.green}/>
+            <StatBox label="SOFA Total" value={sofa} large color={sofa>=10?C.red:sofa>=6?C.yellow:C.green}/>
+          </div>
+          {vis>40&&<Alert type="danger">VIS &gt;40 — soporte masivo</Alert>}
+          {sofa>=10&&<Alert type="danger">SOFA ≥10 — mortalidad &gt;50%</Alert>}
+          {sofa>=6&&sofa<10&&<Alert type="warn">SOFA 6-9 — falla multiorgánica</Alert>}
+          <Divider label="SOFA por componente"/>
+          {SOFA_COMP.map(c=><Field key={c.key} label={c.label}><select value={f[c.key]} onChange={h(c.key)}>{c.opts.map((o,i)=><option key={i} value={i}>{o}</option>)}</select></Field>)}
+        </Card>
+        {(pt.drugLogs||[]).length>0&&<Card title="Historial vasoactivos" sub="Referencia">
+          <div style={{overflowX:"auto"}}><table>
+            <thead><tr><th>Fármaco</th><th>mL/h</th><th>γ</th><th>Hora</th></tr></thead>
+            <tbody>{[...pt.drugLogs].reverse().slice(0,6).map(s=><tr key={s.id}>
+              <td style={{color:C.accent,fontWeight:700,textTransform:"capitalize",fontSize:12}}>{s.drug}</td>
+              <td style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:12}}>{fmt(s.mlh,2)}</td>
+              <td style={{fontFamily:"'IBM Plex Mono',monospace",color:doseColor(s.drug,s.gamma),fontWeight:700,fontSize:12}}>{fmt(s.gamma,4)}</td>
+              <td style={{fontSize:11,color:C.muted}}>{fmtTs(s.savedAt)}</td>
+            </tr>)}
+            </tbody>
+          </table></div>
+        </Card>}
+      </div>
+    </div>
+    {(pt.evolutions||[]).length>0&&<Card title="Historial evoluciones" style={{marginTop:14}}>
+      <div style={{overflowX:"auto"}}><table>
+        <thead><tr><th>Día</th><th>Lac</th><th>PAM</th><th>VIS</th><th>SOFA</th><th>Norepi</th><th>VM</th><th>Hora</th></tr></thead>
+        <tbody>{[...pt.evolutions].reverse().map((e,i)=><tr key={i}>
+          <td><Chip color={C.accent}>{e.dia}</Chip></td>
+          <td style={{color:num(e.lactato)>4?C.red:num(e.lactato)>2?C.yellow:C.text,fontWeight:600}}>{e.lactato||"—"}</td>
+          <td style={{color:num(e.map)<65&&num(e.map)>0?C.yellow:C.text}}>{e.map||"—"}</td>
+          <td style={{color:e.vis>40?C.red:e.vis>20?C.yellow:C.green,fontWeight:700}}>{fmt(e.vis,1)}</td>
+          <td style={{color:e.sofa>=10?C.red:e.sofa>=6?C.yellow:C.green,fontWeight:700}}>{e.sofa}</td>
+          <td style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:12,color:num(e.norepiDose)>0.3?C.red:num(e.norepiDose)>0.1?C.yellow:C.text}}>{e.norepiDose||"—"}</td>
+          <td style={{fontSize:11,color:C.sub}}>{e.vm}</td>
+          <td style={{fontSize:11,color:C.muted}}>{fmtTs(e.savedAt)}</td>
+        </tr>)}
+        </tbody>
+      </table></div>
+    </Card>}
+  </div>;
+}
+
+// ─── DASHBOARD ────────────────────────────────────────────────────────────────
+function DashboardTab({pt,goP,onEdit,onGoTab}){
+  if(!pt) return <NoPt onSel={goP}/>;
+  const firstLab=pt.labs?.[0]||{};
+  const lastLab=pt.labs?.length?pt.labs[pt.labs.length-1]:{};
+  const lastGas=pt.gases?.length?pt.gases[pt.gases.length-1]:{};
+  const lastEvo=pt.evolutions?.length?pt.evolutions[pt.evolutions.length-1]:{};
+  const lastBal=pt.balances?.length?pt.balances[pt.balances.length-1]:{};
+  const idx=labIdx(firstLab.neutrofilos,firstLab.linfocitos,firstLab.plaquetas);
+  const hbForCalc=lastGas.hb||lastLab.hb||"";
+  const hemo=hbForCalc?calcHemodynamics({...lastGas,hb:hbForCalc},pt):null;
+  const basicInterp=lastGas.lactato||lastGas.scvo2?interpretGas(lastGas):null;
+  const balAcum=(pt.balances||[]).reduce((s,b)=>s+(b.balance||0),0);
+  const alerts=[];
+  if(idx.sii>1000) alerts.push({t:"danger",m:`SII crítico D0: ${fmt(idx.sii,0)}`});
+  if(num(lastLab.lactato)>4) alerts.push({t:"danger",m:`Lactato crítico: ${lastLab.lactato} mmol/L`});
+  else if(num(lastLab.lactato)>2) alerts.push({t:"warn",m:`Lactato elevado: ${lastLab.lactato} mmol/L`});
+  if(lastLab.mdrd&&lastLab.mdrd<30) alerts.push({t:"danger",m:`TFG crítica: ${fmt(lastLab.mdrd,0)} mL/min`});
+  if(num(lastLab.hb)<8&&lastLab.hb) alerts.push({t:"danger",m:`Hb crítica: ${lastLab.hb} g/dL`});
+  if(hemo?.ero2>35) alerts.push({t:"danger",m:`ERO₂ crítica: ${fmt(hemo.ero2,1)}% — extracción máxima`});
+  if(hemo?.ic&&hemo.ic<1.8) alerts.push({t:"danger",m:`IC bajo: ${fmt(hemo.ic,2)} L/min/m²`});
+  if(hemo?.do2i&&hemo.do2i<450) alerts.push({t:"warn",m:`DO₂i insuficiente: ${fmt(hemo.do2i,0)} mL/min/m²`});
+  if(basicInterp&&basicInterp.perfilColor!==C.green) alerts.push({t:basicInterp.perfilColor===C.red?"danger":"warn",m:basicInterp.perfil});
+  if(lastEvo.vis>40) alerts.push({t:"danger",m:`VIS elevado: ${fmt(lastEvo.vis,1)}`});
+  if(lastEvo.sofa>=10) alerts.push({t:"danger",m:`SOFA ≥10 — mortalidad >50%`});
+  if(num(lastEvo.map)<65&&num(lastEvo.map)>0) alerts.push({t:"warn",m:`PAM baja: ${lastEvo.map} mmHg`});
+  if(balAcum>2000) alerts.push({t:"danger",m:`Balance acumulado >2L: ${Math.round(balAcum)} mL`});
+  return <div>
+    {/* Patient hero */}
+    <div style={{background:`linear-gradient(135deg,${C.accent} 0%,#1557A0 100%)`,borderRadius:14,padding:"18px 20px",marginBottom:14,color:"#fff",boxShadow:`0 4px 16px ${C.accent}40`}}>
+      <div style={{display:"flex",justifyContent:"space-between",flexWrap:"wrap",gap:10}}>
+        <div>
+          <div style={{fontSize:22,fontWeight:700}}>{pt.apellidos}, {pt.nombres}</div>
+          {pt.ci&&<div style={{fontSize:13,opacity:.8,marginTop:2}}>CI: {pt.ci}</div>}
+          <div style={{fontSize:13,opacity:.85,marginTop:6}}>{pt.edad}a · {pt.sexo} · <strong>{pt.tipoCirugia}</strong> · FEVI {pt.fevi}% · {pt.peso}kg{pt.sc?` · SC ${pt.sc}m²`:""}</div>
+          <div style={{fontSize:12,opacity:.7,marginTop:3}}>CEC {pt.cec}' · Clamp Ao {pt.clamp}' · UF {pt.uf}mL · Ingreso: {new Date(pt.createdAt).toLocaleDateString()}</div>
+          <div style={{display:"flex",gap:6,marginTop:10,flexWrap:"wrap"}}>
+            {[["Lab",pt.labs?.length],["Gases",pt.gases?.length],["Drogas",pt.drugLogs?.length],["ATB",pt.atbList?.length],["Bal",pt.balances?.length],["Evo",pt.evolutions?.length]].map(([k,v])=>v>0&&<span key={k} style={{background:"rgba(255,255,255,.2)",borderRadius:20,padding:"2px 10px",fontSize:11,fontWeight:600}}>{k} ×{v}</span>)}
+          </div>
+        </div>
+        <div style={{display:"flex",gap:7,flexWrap:"wrap",alignSelf:"flex-start"}}>
+          <button onClick={onEdit} style={{background:"rgba(255,255,255,.2)",border:"1.5px solid rgba(255,255,255,.4)",color:"#fff",borderRadius:8,padding:"6px 14px",fontSize:12,fontWeight:600,cursor:"pointer"}}>✏ Editar</button>
+          {["lab","gases","balance","atb","evolution"].map(t=><button key={t} onClick={()=>onGoTab(t)} style={{background:"rgba(255,255,255,.15)",border:"1.5px solid rgba(255,255,255,.3)",color:"#fff",borderRadius:8,padding:"6px 12px",fontSize:11,fontWeight:600,cursor:"pointer"}}>{t.charAt(0).toUpperCase()+t.slice(1)}</button>)}
+        </div>
+      </div>
+    </div>
+
+    {alerts.length>0&&<Card title="⚡ Alertas clínicas" style={{marginBottom:14}} accent={C.red}>
+      {alerts.map((a,i)=><Alert key={i} type={a.t}>{a.m}</Alert>)}
+    </Card>}
+
+    <div className="tablet-grid-2" style={{gap:14}}>
+      <div>
+        {pt.labs?.length>0&&<Card title="Índices inflamatorios (1er lab)" style={{marginBottom:12}} accent={C.yellow}>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
+            <StatBox label="SII" value={fmt(idx.sii,0)} unit="(N×P)/L" color={idx.sii>1000?C.red:idx.sii>600?C.yellow:C.green}/>
+            <StatBox label="NLR" value={fmt(idx.nlr,2)} unit="N/L" color={idx.nlr>6?C.red:idx.nlr>3?C.yellow:C.green}/>
+            <StatBox label="PLR" value={fmt(idx.plr,0)} unit="P/L" color={idx.plr>200?C.red:idx.plr>150?C.yellow:C.green}/>
+          </div>
+          {lastLab.mdrd&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginTop:10}}>
+            <StatBox label="MDRD" value={fmt(lastLab.mdrd,0)} unit="mL/min/1.73m²" color={lastLab.mdrd<30?C.red:lastLab.mdrd<60?C.yellow:C.green}/>
+            <StatBox label="Hb" value={lastLab.hb||"—"} unit="g/dL" color={num(lastLab.hb)<8?C.red:num(lastLab.hb)<10?C.yellow:C.green}/>
+          </div>}
+        </Card>}
+        {(lastEvo.sofa!=null||lastEvo.vis!=null)&&<Card title="Última evolución" style={{marginBottom:12}} accent={C.green}>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8}}>
+            <StatBox label="SOFA" value={lastEvo.sofa??"-"} large color={lastEvo.sofa>=10?C.red:lastEvo.sofa>=6?C.yellow:C.green}/>
+            <StatBox label="VIS" value={fmt(lastEvo.vis,1)} large color={lastEvo.vis>40?C.red:lastEvo.vis>20?C.yellow:C.green}/>
+            <StatBox label="PAM" value={lastEvo.map||"—"} unit="mmHg" color={num(lastEvo.map)<65&&num(lastEvo.map)>0?C.yellow:C.green}/>
+            <StatBox label="Diuresis" value={lastEvo.diuresis||"—"} unit="mL/24h"/>
+          </div>
+        </Card>}
+        {pt.balances?.length>0&&<Card title="Balance hídrico" style={{marginBottom:12}} accent={C.accent}>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+            <StatBox label="Último balance" value={`${lastBal.balance>=0?"+":""}${Math.round(lastBal.balance||0)}`} unit="mL" large color={lastBal.balance>1000?C.yellow:lastBal.balance<-500?C.red:C.green}/>
+            <StatBox label="Balance acumulado" value={`${balAcum>=0?"+":""}${Math.round(balAcum)}`} unit="mL" large color={balAcum>2000?C.red:balAcum>500?C.yellow:C.green}/>
+          </div>
+        </Card>}
+      </div>
+      <div>
+        {hemo&&<Card title="🫀 Fick — Hemodinámica" style={{marginBottom:12}} accent={hemo.perfilColor}>
+          {hemo.gc&&<div style={{background:hemo.perfilColor===C.red?C.redL:hemo.perfilColor===C.yellow?C.yellowL:C.greenL,border:`2px solid ${hemo.perfilColor}`,borderRadius:9,padding:"10px 14px",marginBottom:10}}>
+            <div style={{fontSize:13,fontWeight:700,color:hemo.perfilColor}}>{hemo.perfil}</div>
+          </div>}
+          <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:8}}>
+            <StatBox label="GC" value={hemo.gc?fmt(hemo.gc,2):"—"} unit="L/min" large color={hemo.gc&&hemo.gc<3.5?C.red:hemo.gc&&hemo.gc<4.5?C.yellow:C.green}/>
+            <StatBox label="IC" value={hemo.ic?fmt(hemo.ic,2):"—"} unit="L/min/m²" large color={hemo.ic&&hemo.ic<1.8?C.red:hemo.ic&&hemo.ic<2.2?C.yellow:C.green}/>
+            <StatBox label="DO₂" value={hemo.do2?fmt(hemo.do2,0):"—"} unit="mL O₂/min" color={hemo.do2&&hemo.do2<500?C.red:C.green}/>
+            <StatBox label="ERO₂" value={hemo.ero2?fmt(hemo.ero2,1)+"%":"—"} color={hemo.ero2>35?C.red:hemo.ero2>30?C.yellow:C.green}/>
+          </div>
+        </Card>}
+        {basicInterp&&<Card title="Perfil gasométrico" style={{marginBottom:12}} accent={basicInterp.perfilColor}>
+          <div style={{background:basicInterp.perfilColor===C.red?C.redL:basicInterp.perfilColor===C.yellow?C.yellowL:C.greenL,border:`2px solid ${basicInterp.perfilColor}`,borderRadius:9,padding:"10px 14px",marginBottom:10}}>
+            <div style={{fontSize:13,fontWeight:700,color:basicInterp.perfilColor}}>{basicInterp.perfil}</div>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
+            <StatBox label="ΔP CO₂" value={lastGas.pvco2&&lastGas.paco2?fmt(basicInterp.dPCO2,1):"—"} unit="mmHg" color={basicInterp.dPCO2>10?C.red:basicInterp.dPCO2>6?C.yellow:C.green}/>
+            <StatBox label="ScvO₂" value={lastGas.scvo2||"—"} unit="%" color={num(lastGas.scvo2)<60?C.red:num(lastGas.scvo2)<70?C.yellow:C.green}/>
+            <StatBox label="P/F" value={lastGas.fio2?fmt(basicInterp.pf,0):"—"} color={basicInterp.pf<200?C.red:basicInterp.pf<300?C.yellow:C.green}/>
+          </div>
+        </Card>}
+        {pt.atbList?.length>0&&<Card title="ATB activos" accent={C.yellow}>
+          {pt.atbList.map(a=><div key={a.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:`1px solid ${C.border}`}}>
+            <div><span style={{color:C.accent,fontWeight:700}}>{a.name}</span><span style={{fontSize:12,color:C.muted,marginLeft:8}}>{a.startDay}</span></div>
+            {a.needsAdj&&<Chip color={C.red}>Ajuste renal</Chip>}
+          </div>)}
+        </Card>}
+      </div>
+    </div>
+  </div>;
+}
+
+// ─── EXPORT ───────────────────────────────────────────────────────────────────
+function ExportTab({pts,setPts}){
+  const [st,setSt]=useState("idle");
+  const [msg,setMsg]=useState("");
+  const exportCSV=()=>{
+    if(!pts.length)return;
+    const rows=pts.map(p=>{const l0=p.labs?.[0]||{};const ll=p.labs?.[p.labs.length-1]||{};const idx=labIdx(l0.neutrofilos,l0.linfocitos,l0.plaquetas);const le=p.evolutions?.[p.evolutions.length-1]||{};const balAcum=(p.balances||[]).reduce((s,b)=>s+(b.balance||0),0);const lg=p.gases?.[p.gases.length-1]||{};const hb=lg.hb||ll.hb||"";const hm=hb?calcHemodynamics({...lg,hb},p):null;return{ID:p.id,CI:p.ci||"",Apellidos:p.apellidos,Nombres:p.nombres,Edad:p.edad,Sexo:p.sexo,Cirugia:p.tipoCirugia,FEVI:p.fevi,Peso:p.peso,SC:p.sc||"",CEC:p.cec,Clamp:p.clamp,UF:p.uf,Hb:ll.hb||"",SII:idx.sii?+fmt(idx.sii,0):"",NLR:idx.nlr?+fmt(idx.nlr,2):"",Lac_D0:l0.lactato||"",Crea_D0:l0.creatinina||"",MDRD:ll.mdrd||"",CG:ll.cg||"",GC_Fick:hm?.gc?+fmt(hm.gc,2):"",IC_Fick:hm?.ic?+fmt(hm.ic,2):"",DO2:hm?.do2?+fmt(hm.do2,0):"",ERO2:hm?.ero2?+fmt(hm.ero2,1):"",SOFA_ult:le.sofa??'',VIS_ult:le.vis!=null?+fmt(le.vis,1):"",BalAcum:Math.round(balAcum),ATB:(p.atbList||[]).map(a=>a.name).join("|"),Fecha:new Date(p.createdAt).toLocaleDateString()};});
+    const h=Object.keys(rows[0]);
+    dl([h.join(","),...rows.map(r=>h.map(k=>`"${String(r[k]??'').replace(/"/g,'""')}"`).join(","))].join("\n"),`UCI_CARDIO_${today()}.csv`,"text/csv");
+  };
+  const exportXLSX=async()=>{
+    if(!pts.length)return;setSt("loading");
+    try{
+      await loadXLSX();const X=window.XLSX;const wb=X.utils.book_new();
+      const rows=pts.map(p=>{const l0=p.labs?.[0]||{};const ll=p.labs?.[p.labs.length-1]||{};const idx=labIdx(l0.neutrofilos,l0.linfocitos,l0.plaquetas);const le=p.evolutions?.[p.evolutions.length-1]||{};const balAcum=(p.balances||[]).reduce((s,b)=>s+(b.balance||0),0);const lg=p.gases?.[p.gases.length-1]||{};const hb=lg.hb||ll.hb||"";const hm=hb?calcHemodynamics({...lg,hb},p):null;return{CI:p.ci||"",Apellidos:p.apellidos,Nombres:p.nombres,Edad:p.edad,Sexo:p.sexo,Cirugia:p.tipoCirugia,FEVI:p.fevi,Peso:p.peso,SC:p.sc||"",Hb:ll.hb||"",SII:idx.sii?+fmt(idx.sii,0):"",NLR:idx.nlr?+fmt(idx.nlr,2):"",PLR:idx.plr?+fmt(idx.plr,0):"",Lac_D0:l0.lactato||"",Crea_D0:l0.creatinina||"",MDRD:ll.mdrd||"",GC_Fick:hm?.gc?+fmt(hm.gc,2):"",IC_Fick:hm?.ic?+fmt(hm.ic,2):"",DO2:hm?.do2?+fmt(hm.do2,0):"",DO2i:hm?.do2i?+fmt(hm.do2i,0):"",VO2:hm?.vo2real?+fmt(hm.vo2real,0):"",ERO2:hm?.ero2?+fmt(hm.ero2,1):"",CaO2:hm?.cao2?+fmt(hm.cao2,2):"",CvO2:hm?.cvo2?+fmt(hm.cvo2,2):"",DifAvO2:hm?.avdo2?+fmt(hm.avdo2,2):"",SOFA_ult:le.sofa??'',VIS_ult:le.vis!=null?+fmt(le.vis,1):"",BalAcum:Math.round(balAcum),ATB:(p.atbList||[]).map(a=>a.name).join("|")};});
+      X.utils.book_append_sheet(wb,X.utils.json_to_sheet(rows),"Pacientes");
+      const labRows=pts.flatMap(p=>(p.labs||[]).map(l=>{const ix=labIdx(l.neutrofilos,l.linfocitos,l.plaquetas);return{CI:p.ci||"",Paciente:`${p.apellidos}, ${p.nombres}`,Dia:l.dia,Hb:l.hb||"",Neut:l.neutrofilos||"",Linf:l.linfocitos||"",Plaq:l.plaquetas||"",SII:ix.sii?+fmt(ix.sii,0):"",NLR:ix.nlr?+fmt(ix.nlr,2):"",Lac:l.lactato||"",Crea:l.creatinina||"",Trop:l.troponina||"",MDRD:l.mdrd||"",CG:l.cg||"",Fecha:fmtTs(l.savedAt)};}));
+      if(labRows.length)X.utils.book_append_sheet(wb,X.utils.json_to_sheet(labRows),"Laboratorios");
+      const gasRows=pts.flatMap(p=>(p.gases||[]).map(g=>{const ip=interpretGas(g);const hb=g.hb||p.labs?.[p.labs.length-1]?.hb||"";const hm=hb?calcHemodynamics({...g,hb},p):null;return{CI:p.ci||"",Paciente:`${p.apellidos}, ${p.nombres}`,Dia:g.dia,pH:g.ph||"",PaO2:g.pao2||"",PaCO2:g.paco2||"",HCO3:g.hco3||"",BE:g.be||"",SaO2:g.sao2||"",FiO2:g.fio2||"",PvCO2:g.pvco2||"",PvO2:g.pvo2||"",ScvO2:g.scvo2||"",Lac:g.lactato||"",Hb:hb||"",PF:g.fio2?+fmt(ip.pf,0):"",DeltaPCO2:g.pvco2&&g.paco2?+fmt(ip.dPCO2,1):"",LacClear:ip.lacClear!=null?+fmt(ip.lacClear,1):"",CaO2:hm?.cao2?+fmt(hm.cao2,2):"",CvO2:hm?.cvo2?+fmt(hm.cvo2,2):"",DifAvO2:hm?.avdo2?+fmt(hm.avdo2,2):"",GC_Fick:hm?.gc?+fmt(hm.gc,2):"",IC:hm?.ic?+fmt(hm.ic,2):"",DO2:hm?.do2?+fmt(hm.do2,0):"",DO2i:hm?.do2i?+fmt(hm.do2i,0):"",VO2:hm?.vo2real?+fmt(hm.vo2real,0):"",ERO2:hm?.ero2?+fmt(hm.ero2,1):"",Perfil:ip.perfil.replace(/[✅⚠🚨]/g,"").trim(),Fecha:fmtTs(g.savedAt)};}));
+      if(gasRows.length)X.utils.book_append_sheet(wb,X.utils.json_to_sheet(gasRows),"Gasometría + Fick");
+      const balRows=pts.flatMap(p=>(p.balances||[]).map(b=>({CI:p.ci||"",Paciente:`${p.apellidos}, ${p.nombres}`,Dia:b.dia,Ingresos:Math.round(b.totalIng||0),Egresos:Math.round(b.totalEgr||0),Balance:Math.round(b.balance||0),Fecha:fmtTs(b.savedAt)})));
+      if(balRows.length)X.utils.book_append_sheet(wb,X.utils.json_to_sheet(balRows),"Balances");
+      const evoRows=pts.flatMap(p=>(p.evolutions||[]).map(e=>({CI:p.ci||"",Paciente:`${p.apellidos}, ${p.nombres}`,Dia:e.dia,Lac:e.lactato||"",PAM:e.map||"",VIS:e.vis!=null?+fmt(e.vis,1):"",SOFA:e.sofa??'',Norepi:e.norepiDose||"",VM:e.vm,Fecha:fmtTs(e.savedAt)})));
+      if(evoRows.length)X.utils.book_append_sheet(wb,X.utils.json_to_sheet(evoRows),"Evoluciones");
+      X.writeFile(wb,`UCI_CARDIO_${today()}.xlsx`);setSt("done");setTimeout(()=>setSt("idle"),3000);
+    }catch(e){setSt("error");console.error(e);}
+  };
+  const importJSON=e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=ev=>{try{const d=JSON.parse(ev.target.result);if(!Array.isArray(d))throw 0;if(!confirm(`Importar ${d.length} pacientes?`))return;setPts(prev=>{const ids=new Set(prev.map(p=>p.id));return [...prev,...d.filter(p=>!ids.has(p.id))];});setMsg(`✓ ${d.length} importados.`);}catch{setMsg("✗ Error.");}};r.readAsText(f);e.target.value="";};
+  return <div>
+    <Card title="Exportar datos" style={{marginBottom:12}} accent={C.green}>
+      <div style={{color:C.sub,fontSize:13,marginBottom:14}}>{pts.length} paciente(s) en base local</div>
+      <Grid cols={3} gap={10}>
+        <div><Btn full onClick={exportCSV} disabled={!pts.length}>⬇ CSV</Btn><div style={{fontSize:11,color:C.muted,marginTop:5,textAlign:"center"}}>SPSS · Stata</div></div>
+        <div><Btn full onClick={exportXLSX} disabled={!pts.length||st==="loading"} color={C.green}>{st==="loading"?"Generando...":st==="done"?"✓ Listo":"⬇ Excel .xlsx"}</Btn><div style={{fontSize:11,color:C.muted,marginTop:5,textAlign:"center"}}>5 hojas + Fick</div></div>
+        <div><Btn full onClick={()=>dl(JSON.stringify(pts,null,2),`UCI_DB_${today()}.json`,"application/json")} disabled={!pts.length} color={C.yellow}>⬇ JSON</Btn><div style={{fontSize:11,color:C.muted,marginTop:5,textAlign:"center"}}>Backup completo</div></div>
+      </Grid>
+    </Card>
+    <Card title="Importar backup" style={{marginBottom:12}}>
+      <label style={{display:"block",background:C.mutedL,border:`2px dashed ${C.border}`,borderRadius:10,padding:18,textAlign:"center",cursor:"pointer",color:C.muted,fontSize:13}}>
+        📂 Seleccionar archivo JSON
+        <input type="file" accept=".json" onChange={importJSON} style={{display:"none"}}/>
+      </label>
+      {msg&&<div style={{marginTop:8,fontSize:13,color:msg.startsWith("✓")?C.green:C.red,fontWeight:600}}>{msg}</div>}
+    </Card>
+    {pts.length>0&&<Card title="Vista previa">
+      <div style={{overflowX:"auto"}}><table>
+        <thead><tr><th>Paciente</th><th>GC</th><th>IC</th><th>DO₂</th><th>ERO₂</th><th>SOFA</th><th>VIS</th><th>Bal acum</th></tr></thead>
+        <tbody>{pts.map(p=>{const le=p.evolutions?.[p.evolutions.length-1]||{};const lg=p.gases?.[p.gases.length-1]||{};const ll=p.labs?.[p.labs.length-1]||{};const hb=lg.hb||ll.hb||"";const hm=hb?calcHemodynamics({...lg,hb},p):null;const ba=(p.balances||[]).reduce((s,b)=>s+(b.balance||0),0);return <tr key={p.id}>
+          <td><div style={{fontWeight:600}}>{p.apellidos}, {p.nombres}</div><div style={{fontSize:11,color:C.muted}}>{p.ci||p.id.slice(0,8)}</div></td>
+          <td style={{color:hm?.gc&&hm.gc<3.5?C.red:hm?.gc&&hm.gc<4.5?C.yellow:C.text,fontWeight:700}}>{hm?.gc?fmt(hm.gc,1):"—"}</td>
+          <td style={{color:hm?.ic&&hm.ic<1.8?C.red:hm?.ic&&hm.ic<2.2?C.yellow:C.text,fontWeight:700}}>{hm?.ic?fmt(hm.ic,2):"—"}</td>
+          <td style={{color:hm?.do2&&hm.do2<500?C.red:C.text}}>{hm?.do2?fmt(hm.do2,0):"—"}</td>
+          <td style={{color:hm?.ero2>35?C.red:hm?.ero2>30?C.yellow:C.text,fontWeight:700}}>{hm?.ero2?fmt(hm.ero2,1)+"%":"—"}</td>
+          <td style={{color:le.sofa>=10?C.red:le.sofa>=6?C.yellow:C.text,fontWeight:700}}>{le.sofa??'—'}</td>
+          <td style={{color:le.vis>40?C.red:C.text,fontWeight:700}}>{le.vis!=null?fmt(le.vis,1):"—"}</td>
+          <td style={{color:ba>2000?C.red:ba>500?C.yellow:C.text}}>{Math.round(ba)}</td>
+        </tr>;})}
+        </tbody>
+      </table></div>
+    </Card>}
+    <Btn full variant="outline" color={C.red} onClick={()=>{if(!confirm("¿Vaciar toda la base?"))return;setPts([]);}} disabled={!pts.length} style={{marginTop:12}}>🗑 Vaciar base de datos</Btn>
+  </div>;
+}
+
+function dl(c,n,t){const b=new Blob([c],{type:t});const u=URL.createObjectURL(b);const a=document.createElement("a");a.href=u;a.download=n;a.click();URL.revokeObjectURL(u);}
+
+
+    // Mount app
+    const container = document.getElementById('root');
+    const root = ReactDOM.createRoot(container);
+    root.render(React.createElement(App));
+  </script>
+
+  <script>
+    // PWA Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+      });
+    }
+    // Prevent double-tap zoom on iOS
+    let lastTouch = 0;
+    document.addEventListener('touchend', e => {
+      const now = Date.now();
+      if (now - lastTouch < 300) e.preventDefault();
+      lastTouch = now;
+    }, { passive: false });
+  </script>
+</body>
+</html>
