@@ -1,0 +1,1427 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="UTI INC"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="theme-color" content="#1A6FBF"/>
+<title>UTI INC — Sistema Clínico</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px;-webkit-text-size-adjust:100%}
+body{background:#F2F5FB;color:#18243A;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh;-webkit-tap-highlight-color:transparent}
+input,select,textarea{background:#fff;border:1.5px solid #DDE3EE;color:#18243A;border-radius:8px;padding:9px 12px;font-family:inherit;font-size:14px;width:100%;transition:border .15s;-webkit-appearance:none;appearance:none}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#1A6FBF;box-shadow:0 0 0 3px rgba(26,111,191,.12)}
+input:disabled{background:#F0F3FA;color:#8896B0;cursor:default}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238896B0' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+table{border-collapse:collapse;width:100%}
+th{background:#F0F3FA;color:#8896B0;font-size:11px;text-transform:uppercase;letter-spacing:.08em;padding:8px 12px;text-align:left;border-bottom:2px solid #DDE3EE}
+td{padding:9px 12px;border-bottom:1px solid #DDE3EE;font-size:13px;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#EBF3FC}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:#DDE3EE;border-radius:4px}
+
+/* LAYOUT */
+#shell{display:flex;flex-direction:column;min-height:100vh}
+#header{background:linear-gradient(135deg,#1A6FBF,#1557A0);padding:0 16px;height:52px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 10px rgba(26,111,191,.3);position:sticky;top:0;z-index:100;flex-shrink:0}
+#body{display:flex;flex:1;min-height:0}
+#sidenav{width:190px;background:#fff;border-right:1.5px solid #DDE3EE;display:flex;flex-direction:column;padding:10px 8px;gap:2px;overflow-y:auto;flex-shrink:0}
+#topnav{background:#fff;border-bottom:1.5px solid #DDE3EE;overflow-x:auto;display:none;flex-shrink:0;-webkit-overflow-scrolling:touch}
+#main{flex:1;overflow-y:auto;padding:16px;-webkit-overflow-scrolling:touch}
+#inner{max-width:900px;margin:0 auto}
+.snb{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:9px;border:none;cursor:pointer;font-size:13px;font-weight:600;text-align:left;background:transparent;color:#8896B0;width:100%;transition:all .15s}
+.snb.on{background:#EBF3FC;color:#1A6FBF}
+.snb:hover:not(.on){background:#F0F3FA;color:#4A5568}
+.tnb{background:transparent;border:none;border-bottom:2.5px solid transparent;color:#8896B0;padding:10px 11px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .15s;font-family:inherit}
+.tnb.on{background:#EBF3FC;border-bottom-color:#1A6FBF;color:#1A6FBF}
+@media(min-width:768px){#sidenav{display:flex}#topnav{display:none}#body{overflow:hidden;height:calc(100vh - 52px)}}
+@media(max-width:767px){#sidenav{display:none!important}#topnav{display:flex}#body{flex-direction:column}#main{height:auto}}
+@media(max-width:640px){html{font-size:14px}}
+
+/* CARDS */
+.card{background:#fff;border-radius:12px;border:1.5px solid #DDE3EE;box-shadow:0 2px 8px rgba(0,0,0,.05);overflow:hidden;margin-bottom:12px}
+.card.al{border-left:4px solid var(--ac,#1A6FBF)}
+.card-h{background:#F0F3FA;padding:10px 16px;border-bottom:1.5px solid #DDE3EE;display:flex;justify-content:space-between;align-items:center}
+.card-t{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#1A6FBF}
+.card-s{font-size:11px;color:#8896B0}
+.card-b{padding:16px}
+
+/* GRID */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.tg{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+@media(max-width:767px){.tg{grid-template-columns:1fr}.g3{grid-template-columns:1fr 1fr}.g4{grid-template-columns:1fr 1fr}}
+@media(max-width:480px){.g2,.g3{grid-template-columns:1fr}}
+
+/* FIELD */
+.fld{margin-bottom:12px}
+.fld label{display:block;font-size:11px;color:#4A5568;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.fld .hint{font-size:11px;color:#8896B0;margin-top:3px;font-style:italic}
+.span2{grid-column:1/-1}
+
+/* BUTTONS */
+.btn{border:none;border-radius:8px;padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;font-family:inherit;white-space:nowrap}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-fill{background:#1A6FBF;color:#fff;box-shadow:0 2px 6px rgba(26,111,191,.35)}
+.btn-green{background:#1A7A4A;color:#fff;box-shadow:0 2px 6px rgba(26,122,74,.3)}
+.btn-yellow{background:#A85000;color:#fff}
+.btn-red{background:#B8000F;color:#fff}
+.btn-outline{background:transparent;border:1.5px solid currentColor}
+.btn-sm{padding:6px 14px;font-size:12px}
+.btn-full{width:100%}
+
+/* STAT BOX */
+.sb{background:#F0F3FA;border-radius:10px;padding:12px 8px;text-align:center;border:1.5px solid #DDE3EE}
+.sb-val{font-family:'Courier New',monospace;font-size:20px;font-weight:700;line-height:1}
+.sb-val.lg{font-size:26px}
+.sb-unit{font-size:10px;color:#8896B0;margin-top:3px}
+.sb-lbl{font-size:11px;color:#4A5568;margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.sb-sub{font-size:10px;color:#8896B0;margin-top:2px}
+
+/* ALERTS */
+.al-box{border-radius:8px;padding:9px 13px;font-size:13px;font-weight:500;margin-bottom:8px;border:1.5px solid}
+.al-danger{background:#FDEBEC;border-color:#B8000F;color:#B8000F}
+.al-warn{background:#FEF3E2;border-color:#A85000;color:#A85000}
+.al-ok{background:#E6F5EE;border-color:#1A7A4A;color:#1A7A4A}
+.al-info{background:#EBF3FC;border-color:#1A6FBF;color:#1A6FBF}
+
+/* CHIP */
+.chip{display:inline-block;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600;border:1.5px solid;margin:2px}
+
+/* DIVIDER */
+.div{display:flex;align-items:center;gap:8px;margin:14px 0 10px}
+.div::before,.div::after{content:'';flex:1;height:1px;background:#DDE3EE}
+.div span{font-size:11px;color:#8896B0;text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+
+/* PATIENT BAR */
+.ptbar{background:#EBF3FC;border:1.5px solid rgba(26,111,191,.25);border-radius:10px;padding:10px 16px;margin-bottom:14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,#1A6FBF,#1557A0);border-radius:14px;padding:18px 20px;margin-bottom:14px;color:#fff;box-shadow:0 4px 16px rgba(26,111,191,.35)}
+</style>
+</head>
+<body>
+<div id="shell">
+  <div id="header">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:20px">🫀</div>
+      <div>
+        <div style="font-family:monospace;font-weight:700;font-size:13px;color:#fff;letter-spacing:.05em">UTI INC</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.7)">Sistema Clínico · INC Paraguay</div>
+      </div>
+    </div>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+      <div style="width:7px;height:7px;border-radius:50%;background:#4ADE80;box-shadow:0 0 0 3px rgba(74,222,128,.3)"></div>
+      <span style="font-size:10px;color:rgba(255,255,255,.8);font-weight:500">Auto-guardado</span>
+      <span id="hdr-pt" style="font-size:12px;color:#fff;font-weight:700;background:rgba(255,255,255,.15);padding:4px 12px;border-radius:20px;display:none"></span>
+    </div>
+  </div>
+  <div id="topnav"></div>
+  <div id="body">
+    <nav id="sidenav">
+      <div id="sn-ptcard" style="display:none;background:#EBF3FC;border-radius:9px;padding:10px 12px;margin-bottom:10px;border:1px solid rgba(26,111,191,.2)">
+        <div id="sn-ptname" style="font-size:12px;font-weight:700;color:#1A6FBF"></div>
+        <div id="sn-ptinfo" style="font-size:11px;color:#4A5568;margin-top:2px"></div>
+      </div>
+    </nav>
+    <main id="main"><div id="inner"></div></main>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════
+// UTI INC — Sistema Clínico v6 PWA
+// Vanilla JS — carga instantánea, sin dependencias externas
+// ═══════════════════════════════════════════════════════════════════════
+
+// ── STORAGE ──────────────────────────────────────────────────────────
+const SK='uci_v6';
+const DB={
+  load:()=>{try{const r=localStorage.getItem(SK);return r?JSON.parse(r):[]}catch{return[]}},
+  save:d=>{try{localStorage.setItem(SK,JSON.stringify(d))}catch{}}
+};
+let patients=DB.load();
+let selectedId=null;
+let currentTab='patients';
+
+// ── UTILS ─────────────────────────────────────────────────────────────
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const num=v=>parseFloat(v)||0;
+const fmt=(v,d=2)=>(v==null||isNaN(v))?'—':Number(v).toFixed(d);
+const ts=()=>new Date().toISOString();
+const fmtTs=s=>new Date(s).toLocaleString('es-PY',{dateStyle:'short',timeStyle:'short'});
+const today=()=>new Date().toISOString().slice(0,10);
+const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const el=id=>document.getElementById(id);
+const getPt=()=>patients.find(p=>p.id===selectedId)||null;
+const savePts=()=>DB.save(patients);
+
+// ── CLINICAL FORMULAS ─────────────────────────────────────────────────
+const calcMDRD=(cr,age,sex,race)=>{if(!cr||!age)return null;let g=175*Math.pow(num(cr),-1.154)*Math.pow(num(age),-0.203);if(sex==='F')g*=0.742;if(race==='afro')g*=1.212;return g};
+const calcCG=(cr,age,sex,wt)=>{if(!cr||!age||!wt)return null;let c=((140-num(age))*num(wt))/(72*num(cr));if(sex==='F')c*=0.85;return c};
+const ckdStage=g=>{if(g==null)return null;if(g>=90)return{l:'G1 — Normal',c:'#1A7A4A'};if(g>=60)return{l:'G2 — Leve',c:'#1A7A4A'};if(g>=45)return{l:'G3a',c:'#A85000'};if(g>=30)return{l:'G3b',c:'#A85000'};if(g>=15)return{l:'G4 — Grave',c:'#B8000F'};return{l:'G5 — Falla renal',c:'#B8000F'}};
+const labIdx=(n,l,p)=>{const N=num(n),L=num(l),P=num(p);if(!L)return{sii:null,nlr:null,plr:null};return{sii:(N*P)/L,nlr:N/L,plr:P/L}};
+const calcVIS=f=>num(f.dopaDose)+num(f.dobutaDose)+num(f.milriDose)*15+num(f.norepiDose)*100+num(f.epiDose)*100+num(f.vasopressinDose)*10000;
+const calcSOFA=f=>['sofaResp','sofaCoag','sofaHep','sofaCardio','sofaNeuro','sofaRenal'].reduce((s,k)=>s+num(f[k]),0);
+
+const calcHemo=(g,pt)=>{
+  const hb=num(g.hb);if(!hb)return null;
+  const sao2=num(g.sao2)/100,pao2=num(g.pao2),scvo2=num(g.scvo2)/100,pvo2=num(g.pvo2);
+  const age=num(pt?.edad),sc=num(pt?.sc),wt=num(pt?.peso),sex=pt?.sexo||'M',hr=num(g.hr);
+  const cao2=(hb*1.34*sao2)+(pao2*0.0031);
+  const cvo2=scvo2>0?(hb*1.34*scvo2)+(pvo2*0.0031):null;
+  const avdo2=cvo2!=null?cao2-cvo2:null;
+  let vo2est=null;
+  if(age&&wt){
+    const lnA=Math.log(age>0?age:1);
+    const vo2i=sex==='F'?(138.1-(17.04*lnA)+(0.378*(hr||80))):(138.1-(11.49*lnA)+(0.378*(hr||80)));
+    vo2est=vo2i*(sc||Math.sqrt((wt*num(pt?.talla||170))/3600));
+  }
+  const gc=(avdo2&&avdo2>0&&vo2est)?(vo2est/(avdo2*10)):null;
+  const ic=(gc&&sc)?gc/sc:null;
+  const do2=gc?gc*cao2*10:null;
+  const do2i=(do2&&sc)?do2/sc:null;
+  const vo2real=(gc&&avdo2)?gc*avdo2*10:null;
+  const ero2=(vo2real&&do2&&do2>0)?(vo2real/do2)*100:null;
+  const dpco2=num(g.pvco2)-num(g.paco2);
+  const pf=pao2/((num(g.fio2)||21)/100);
+  const lacClear=g.lacBasal?((num(g.lacBasal)-num(g.lactato))/num(g.lacBasal))*100:null;
+  let perfil='Datos insuficientes',pc='#8896B0';
+  if(gc){
+    const iv=ic||0,ev=ero2||0;
+    if(iv>=2.2&&ev<=30){perfil='✅ Gasto cardíaco adecuado';pc='#1A7A4A'}
+    else if(iv<1.8&&ev>35){perfil='🚨 Bajo gasto severo — ERO₂ crítica';pc='#B8000F'}
+    else if(iv<2.2&&ev>30){perfil='⚠ Bajo gasto moderado — aumentar DO₂';pc='#A85000'}
+    else{perfil='⚠ Perfil mixto — evaluar contexto';pc='#A85000'}
+  }
+  const pfLbl=pf>=400?'Normal':pf>=300?'SDRA leve':pf>=200?'SDRA moderado':'SDRA severo';
+  return{cao2,cvo2,avdo2,vo2est,gc,ic,do2,do2i,vo2real,ero2,perfil,pc,dpco2,pf,pfLbl,lacClear};
+};
+
+const interpGas=g=>{
+  const lac=num(g.lactato),scvo2=num(g.scvo2),dpco2=num(g.pvco2)-num(g.paco2);
+  const pf=num(g.pao2)/((num(g.fio2)||21)/100);
+  const lacClear=g.lacBasal?((num(g.lacBasal)-lac)/num(g.lacBasal))*100:null;
+  let perfil='Datos insuficientes',pc='#8896B0';
+  if(g.scvo2&&g.lactato){
+    if(lac<2&&scvo2>=70&&dpco2<=6){perfil='✅ Perfil hemodinámico adecuado';pc='#1A7A4A'}
+    else if(lac>=4&&scvo2<60&&dpco2>10){perfil='🚨 Bajo gasto — shock cardiogénico';pc='#B8000F'}
+    else if(lac>=2&&scvo2<65&&dpco2>6){perfil=scvo2<60?'⚠ Shock cardiogénico probable':'⚠ Hipoperfusión — GC borderline';pc='#B8000F'}
+    else if(lac>=2&&scvo2>=70){perfil='⚠ Hiperlactatemia — distributivo o tipo B';pc='#A85000'}
+    else if(dpco2>10&&scvo2>=70){perfil='⚠ Delta PCO₂ elevado — stasis microcirculatoria';pc='#A85000'}
+    else{perfil='Perfil mixto — interpretar en contexto';pc='#A85000'}
+  }
+  const pfLbl=pf>=400?'Normal':pf>=300?'SDRA leve':pf>=200?'SDRA moderado':'SDRA severo';
+  return{perfil,pc,pf,pfLbl,dpco2,lacClear};
+};
+
+// ── DRUG CONFIG ───────────────────────────────────────────────────────
+const DRUGS={
+  noradrenalina:[{l:'8 mg/200 mL',mg:8,ml:200},{l:'16 mg/200 mL',mg:16,ml:200},{l:'32 mg/200 mL',mg:32,ml:200}],
+  adrenalina:[{l:'10 mg/200 mL',mg:10,ml:200}],
+  dobutamina:[{l:'1000 mg/250 mL',mg:1000,ml:250}],
+  milrinona:[{l:'20 mg/200 mL',mg:20,ml:200},{l:'40 mg/200 mL',mg:40,ml:200}]
+};
+const DRANGES={noradrenalina:[0.1,0.3],adrenalina:[0.1,0.3],dobutamina:[5,10],milrinona:[0.375,0.5]};
+const dColor=(d,g)=>{const r=DRANGES[d];if(!r)return'#1A7A4A';return g<=r[0]?'#1A7A4A':g<=r[1]?'#A85000':'#B8000F'};
+
+// ── ATB DB ────────────────────────────────────────────────────────────
+const ATBS=[
+  {n:'Vancomicina',s:'15-20 mg/kg c/8-12h IV',a:'TFG<50: espaciar + niveles',t:50},
+  {n:'Meropenem',s:'1-2 g c/8h IV (inf ext 3h)',a:'TFG 26-50: 1g c/12h · <10: 500mg c/24h',t:50},
+  {n:'Piperacilina/Tazo',s:'4.5 g c/6h IV (inf ext 4h)',a:'TFG<40: 3.375g c/6h',t:40},
+  {n:'Amikacina',s:'15-20 mg/kg/día IV dosis única',a:'TFG 40-60: c/36h · <20: evitar',t:60},
+  {n:'Gentamicina',s:'5-7 mg/kg/día IV dosis única',a:'TFG<40: c/48h o evitar',t:60},
+  {n:'Colistina',s:'Carga 9 MU · Mant 4.5 MU c/12h',a:'TFG<50: reducir mantenimiento',t:50},
+  {n:'Aztreonam',s:'2 g c/6-8h IV',a:'TFG<30: 1g c/6-8h',t:30},
+  {n:'Ceftazidima',s:'2 g c/8h IV',a:'TFG 31-50: 1g c/8h · <15: 500mg c/24h',t:50},
+  {n:'Ceftazidima/Avibactam',s:'2.5 g c/8h IV (inf 2h)',a:'TFG 31-50: 1.25g c/8h',t:50},
+  {n:'Cefepime',s:'2 g c/8h IV',a:'TFG<30: 1g c/12h',t:30},
+  {n:'Imipenem/Cilastatina',s:'1 g c/6-8h IV',a:'TFG<40: 500mg c/6h',t:40},
+  {n:'Ciprofloxacino',s:'400 mg c/8-12h IV',a:'TFG<30: 200-400mg c/18-24h',t:30},
+  {n:'Linezolid',s:'600 mg c/12h IV/VO',a:'Sin ajuste renal',t:0},
+  {n:'Daptomicina',s:'6-10 mg/kg/día IV',a:'TFG<30: c/48h',t:30},
+  {n:'Tigeciclina',s:'Carga 100mg · Mant 50mg c/12h',a:'Sin ajuste renal',t:0},
+  {n:'Fluconazol',s:'400-800 mg/día IV/VO',a:'TFG<50: reducir 50%',t:50},
+  {n:'Caspofungina',s:'Carga 70mg · Mant 50mg/día',a:'Sin ajuste renal',t:0},
+  {n:'Metronidazol',s:'500 mg c/8h IV',a:'Sin ajuste renal',t:0},
+  {n:'TMP/Sulfa',s:'15-20 mg/kg/día TMP c/6-8h',a:'TFG<30: 50% · <15: evitar',t:30},
+  {n:'Anfotericina B lipo',s:'3-5 mg/kg/día IV',a:'Nefrotóxico — monitorear Cr diario',t:0}
+];
+
+const SOFA=[
+  {k:'sofaResp',l:'Respiratorio (PaO₂/FiO₂)',o:['≥400 (0)','300-399 (1)','200-299 (2)','100-199+VM (3)','<100+VM (4)']},
+  {k:'sofaCoag',l:'Coagulación (Plaq ×10³)',o:['≥150 (0)','100-149 (1)','50-99 (2)','20-49 (3)','<20 (4)']},
+  {k:'sofaHep',l:'Hepático (Bili mg/dL)',o:['<1.2 (0)','1.2-1.9 (1)','2.0-5.9 (2)','6.0-11.9 (3)','≥12 (4)']},
+  {k:'sofaCardio',l:'Cardiovascular',o:['PAM≥70 (0)','PAM<70 (1)','Dopa≤5/Dobuta (2)','Dopa>5/Norepi≤0.1 (3)','Dopa>15/Norepi>0.1 (4)']},
+  {k:'sofaNeuro',l:'Neurológico (Glasgow)',o:['15 (0)','13-14 (1)','10-12 (2)','6-9 (3)','<6 (4)']},
+  {k:'sofaRenal',l:'Renal (Crea mg/dL)',o:['<1.2 (0)','1.2-1.9 (1)','2.0-3.4 (2)','3.5-4.9 (3)','≥5 (4)']}
+];
+
+// ── HTML HELPERS ──────────────────────────────────────────────────────
+const card=(title,body,sub='',accent='')=>`<div class="card${accent?` al`:''}" style="${accent?`--ac:${accent}`:''}"><div class="card-h"><span class="card-t">${title}</span>${sub?`<span class="card-s">${sub}</span>`:''}</div><div class="card-b">${body}</div></div>`;
+const fld=(label,input,hint='',cls='')=>`<div class="fld ${cls}"><label>${label}</label>${input}${hint?`<div class="hint">${hint}</div>`:''}</div>`;
+const inp=(type,val,id,placeholder='',extra='')=>`<input type="${type}" id="${id}" value="${esc(val)}" placeholder="${esc(placeholder)}" ${extra}/>`;
+const sel=(id,opts,val)=>`<select id="${id}">${opts.map(o=>typeof o==='string'?`<option${o===val?' selected':''}>${esc(o)}</option>`:`<option value="${esc(o.v)}"${o.v===val?' selected':''}>${esc(o.l)}</option>`).join('')}</select>`;
+const btn=(label,id,cls='btn btn-fill',disabled=false)=>`<button class="${cls}" id="${id}"${disabled?' disabled':''}>${label}</button>`;
+const abox=(type,msg)=>`<div class="al-box al-${type}">${msg}</div>`;
+const div=(label)=>`<div class="div"><span>${label}</span></div>`;
+const chip=(label,color='#1A6FBF')=>`<span class="chip" style="color:${color};border-color:${color}40;background:${color}18">${label}</span>`;
+const sb=(label,val,unit='',color='#1A6FBF',sub='',large=false)=>`<div class="sb"><div class="sb-val${large?' lg':''}" style="color:${color}">${val}</div>${unit?`<div class="sb-unit">${unit}</div>`:''}<div class="sb-lbl">${label}</div>${sub?`<div class="sb-sub">${sub}</div>`:''}</div>`;
+const dayOpts=['Día 0','Día 1','Día 2','Día 3','Día 4','Día 5'];
+
+// ── TABS CONFIG ───────────────────────────────────────────────────────
+const TABS=[
+  {id:'patients',i:'📋',l:'Pacientes'},
+  {id:'register',i:'➕',l:'Ingreso'},
+  {id:'lab',i:'🧪',l:'Lab'},
+  {id:'gases',i:'🫁',l:'Gases'},
+  {id:'drugs',i:'💉',l:'Drogas'},
+  {id:'atb',i:'💊',l:'ATB'},
+  {id:'balance',i:'⚖',l:'Balance'},
+  {id:'evolution',i:'📅',l:'Evolución'},
+  {id:'dashboard',i:'📊',l:'Dashboard'},
+  {id:'export',i:'💾',l:'Exportar'}
+];
+
+// ── RENDER ENGINE ─────────────────────────────────────────────────────
+function render(html){
+  el('inner').innerHTML=html;
+  attachEvents();
+}
+
+function goTab(t){
+  currentTab=t;
+  document.querySelectorAll('.snb,.tnb').forEach(b=>{
+    b.classList.toggle('on',b.dataset.tab===t);
+  });
+  renderTab();
+}
+
+function renderTab(){
+  const pt=getPt();
+  // Update header patient name
+  const hpt=el('hdr-pt');
+  if(pt){hpt.textContent=`${pt.apellidos}, ${pt.nombres}`;hpt.style.display='inline'}
+  else hpt.style.display='none';
+  // Update side nav patient card
+  const snpc=el('sn-ptcard');
+  if(pt){
+    snpc.style.display='block';
+    el('sn-ptname').textContent=pt.apellidos+', '+pt.nombres;
+    el('sn-ptinfo').textContent=`${pt.edad}a · ${pt.tipoCirugia}`;
+  } else snpc.style.display='none';
+
+  switch(currentTab){
+    case 'patients': renderPatients();break;
+    case 'register': renderRegister();break;
+    case 'lab': renderLab();break;
+    case 'gases': renderGases();break;
+    case 'drugs': renderDrugs();break;
+    case 'atb': renderATB();break;
+    case 'balance': renderBalance();break;
+    case 'evolution': renderEvolution();break;
+    case 'dashboard': renderDashboard();break;
+    case 'export': renderExport();break;
+  }
+}
+
+// ── NAV SETUP ─────────────────────────────────────────────────────────
+function setupNav(){
+  // Side nav
+  const sn=el('sidenav');
+  let snHtml=sn.innerHTML;
+  snHtml+=TABS.map(t=>`<button class="snb${t.id===currentTab?' on':''}" data-tab="${t.id}"><span style="font-size:16px">${t.i}</span><span>${t.l}</span></button>`).join('');
+  snHtml+=`<div style="margin-top:auto;padding:10px 0;border-top:1px solid #DDE3EE;font-size:10px;color:#8896B0;text-align:center" id="sn-count">${patients.length} paciente(s)</div>`;
+  sn.innerHTML=snHtml;
+  // Top nav
+  el('topnav').innerHTML=TABS.map(t=>`<button class="tnb${t.id===currentTab?' on':''}" data-tab="${t.id}">${t.i} ${t.l}</button>`).join('');
+  // Events
+  document.querySelectorAll('.snb,.tnb').forEach(b=>{
+    b.addEventListener('click',()=>goTab(b.dataset.tab));
+  });
+}
+
+// ── PATIENT BAR HTML ──────────────────────────────────────────────────
+function ptBarHtml(){
+  const pt=getPt();if(!pt)return'';
+  const ll=pt.labs?.[pt.labs.length-1]||{};
+  const mdrd=ll.mdrd;
+  return `<div class="ptbar">
+    <div style="flex:1;min-width:200px">
+      <div style="font-weight:700;font-size:14px">${esc(pt.apellidos)}, ${esc(pt.nombres)}</div>
+      <div style="font-size:12px;color:#4A5568;margin-top:3px;display:flex;flex-wrap:wrap;gap:8px">
+        ${pt.ci?`<span>CI: ${esc(pt.ci)}</span>`:''}
+        <span>${pt.edad}a · ${pt.sexo}</span>
+        <span style="color:#1A6FBF;font-weight:600">${esc(pt.tipoCirugia)}</span>
+        <span>FEVI <strong>${pt.fevi||'—'}%</strong></span>
+        <span>Peso <strong style="color:#1A6FBF">${pt.peso||'—'} kg</strong></span>
+        ${pt.sc?`<span>SC <strong>${pt.sc} m²</strong></span>`:''}
+        ${mdrd?`<span>TFG <strong style="color:${mdrd<30?'#B8000F':mdrd<60?'#A85000':'#1A7A4A'}">${fmt(mdrd,0)}</strong></span>`:''}
+        ${ll.hb?`<span>Hb <strong style="color:${num(ll.hb)<8?'#B8000F':num(ll.hb)<10?'#A85000':'#1A7A4A'}">${ll.hb}</strong></span>`:''}
+      </div>
+    </div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap">
+      ${ll.lactato?chip('Lac '+ll.lactato,num(ll.lactato)>4?'#B8000F':num(ll.lactato)>2?'#A85000':'#1A7A4A'):''}
+      ${ll.creatinina?chip('Cr '+ll.creatinina,num(ll.creatinina)>2?'#B8000F':num(ll.creatinina)>1.2?'#A85000':'#1A7A4A'):''}
+    </div>
+  </div>`;
+}
+
+function noPatientHtml(){
+  return card('','<div style="text-align:center;padding:40px 0;color:#8896B0"><div style="font-size:44px;margin-bottom:12px">🏥</div><div style="margin-bottom:16px;font-size:15px;color:#4A5568">Ningún paciente seleccionado.</div><button class="btn btn-fill" onclick="goTab(\'patients\')">Ir a pacientes</button></div>');
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// PAGES
+// ═══════════════════════════════════════════════════════════════════════
+
+// ── PATIENTS ──────────────────────────────────────────────────────────
+function renderPatients(){
+  let html=`<div style="display:flex;gap:10px;margin-bottom:16px">
+    <input type="search" id="pt-search" placeholder="🔍 Buscar nombre o CI..." style="flex:1" value="">
+    <button class="btn btn-fill" onclick="goTab('register');selectedId=null">+ Nuevo</button>
+  </div>`;
+  const list=patients;
+  if(!list.length){
+    html+=card('','<div style="text-align:center;padding:40px 0;color:#8896B0"><div style="font-size:44px;margin-bottom:10px">🏥</div><div style="margin-bottom:14px">Sin pacientes registrados.</div><button class="btn btn-fill" onclick="goTab(\'register\')">Registrar primer paciente</button></div>');
+  } else {
+    html+='<div class="tg">';
+    list.forEach(p=>{
+      const l0=p.labs?.[0]||{};
+      const idx=labIdx(l0.neutrofilos,l0.linfocitos,l0.plaquetas);
+      const chips=[
+        p.labs?.length&&chip('Lab ×'+p.labs.length),
+        p.gases?.length&&chip('Gases ×'+p.gases.length),
+        p.evolutions?.length&&chip('Evo ×'+p.evolutions.length,'#1A7A4A'),
+        p.atbList?.length&&chip('ATB ×'+p.atbList.length,'#A85000'),
+        idx.sii>1000&&chip('SII↑ '+fmt(idx.sii,0),'#B8000F'),idx.nlr>6&&chip('NLR↑ '+fmt(idx.nlr,1),'#B8000F'),idx.plr>200&&chip('PLR↑ '+fmt(idx.plr,0),'#A85000'),
+      ].filter(Boolean).join('');
+      html+=`<div class="card" style="margin-bottom:0">
+        <div class="card-b">
+          <div style="font-weight:700;font-size:15px">${esc(p.apellidos)}, ${esc(p.nombres)}</div>
+          <div style="color:#4A5568;font-size:12px;margin-top:3px">${p.ci?`<span style="color:#8896B0;margin-right:8px">CI: ${esc(p.ci)}</span>`:''}${p.edad}a · ${p.sexo} · <strong style="color:#1A6FBF">${esc(p.tipoCirugia)}</strong> · FEVI ${p.fevi}%</div>
+          <div style="margin-top:8px">${chips}</div>
+          <div style="display:flex;gap:7px;margin-top:12px;flex-wrap:wrap;padding-top:10px;border-top:1px solid #DDE3EE">
+            <button class="btn btn-fill btn-sm" onclick="selGo('${p.id}','dashboard')">📊 Dashboard</button>
+            <button class="btn btn-outline btn-sm" style="color:#1A6FBF;border-color:#1A6FBF" onclick="selGo('${p.id}','lab')">Lab</button>
+            <button class="btn btn-outline btn-sm" style="color:#1A6FBF;border-color:#1A6FBF" onclick="selGo('${p.id}','gases')">Gases</button>
+            <button class="btn btn-outline btn-sm" style="color:#A85000;border-color:#A85000" onclick="selGo('${p.id}','register')">✏</button>
+            <button class="btn btn-outline btn-sm" style="color:#B8000F;border-color:#B8000F" onclick="delPt('${p.id}')">✕</button>
+          </div>
+        </div>
+      </div>`;
+    });
+    html+='</div>';
+  }
+  render(html);
+  el('pt-search').addEventListener('input',function(){
+    const q=this.value.toLowerCase();
+    document.querySelectorAll('#inner .tg > .card').forEach((c,i)=>{
+      const p=patients[i];
+      c.style.display=(!q||`${p.apellidos} ${p.nombres} ${p.ci||''}`.toLowerCase().includes(q))?'':'none';
+    });
+  });
+}
+
+window.selGo=(id,tab)=>{selectedId=id;goTab(tab)};
+window.delPt=id=>{if(!confirm('¿Eliminar paciente?'))return;patients=patients.filter(p=>p.id!==id);if(selectedId===id)selectedId=null;savePts();renderPatients()};
+
+// ── REGISTER ──────────────────────────────────────────────────────────
+let regForm={ci:'',apellidos:'',nombres:'',edad:'',sexo:'M',raza:'noafro',tipoCirugia:'CABG',fevi:'',cec:'',clamp:'',uf:'',peso:'',talla:''};
+
+function renderRegister(){
+  const pt=getPt();
+  if(pt) Object.assign(regForm,pt);
+  else regForm={ci:'',apellidos:'',nombres:'',edad:'',sexo:'M',raza:'noafro',tipoCirugia:'CABG',fevi:'',cec:'',clamp:'',uf:'',peso:'',talla:''};
+  const isEdit=!!pt;
+  const sc_v=regForm.peso&&regForm.talla?Math.sqrt((num(regForm.peso)*num(regForm.talla))/3600).toFixed(2):'';
+  render(`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div style="font-size:18px;font-weight:700;color:${isEdit?'#A85000':'#1A6FBF'}">${isEdit?'✏ Editar paciente':'➕ Nuevo paciente'}</div>
+      <button class="btn btn-outline btn-sm" style="color:#8896B0;border-color:#8896B0" onclick="goTab('patients')">Cancelar</button>
+    </div>
+    <div class="tg">
+      ${card('Identificación',`
+        <div class="g2">
+          ${fld('Cédula de identidad',inp('text',regForm.ci,'r-ci','4.123.456'))}
+          ${fld('Apellidos',inp('text',regForm.apellidos,'r-ap','Apellido(s)'))}
+          ${fld('Nombres',inp('text',regForm.nombres,'r-nom','Nombre(s)'))}
+          ${fld('Edad (años)',inp('number',regForm.edad,'r-edad'))}
+          ${fld('Sexo',sel('r-sex',['M','F'],regForm.sexo))}
+          ${fld('Raza (MDRD)',sel('r-raza',[{v:'noafro',l:'No afrodescendiente'},{v:'afro',l:'Afrodescendiente'}],regForm.raza))}
+          ${fld('Tipo de cirugía',sel('r-cir',['CABG','Valvular','Combinada','Otra'],regForm.tipoCirugia))}
+          ${fld('FEVI (%)',inp('number',regForm.fevi,'r-fevi'))}
+        </div>`)}
+      <div>
+        ${card('Antropometría',`<div class="g3">
+          ${fld('Peso (kg)',inp('number',regForm.peso,'r-peso'))}
+          ${fld('Talla (cm)',inp('number',regForm.talla,'r-talla'))}
+          ${fld('SC (m²)',`<input type="text" id="r-sc" value="${sc_v}" disabled/>`,  'Mosteller — auto')}
+        </div>`)}
+        ${card('Intraoperatorio',`<div class="g3">
+          ${fld('CEC (min)',inp('number',regForm.cec,'r-cec'))}
+          ${fld('Clamp Ao (min)',inp('number',regForm.clamp,'r-clamp'))}
+          ${fld('UF (mL)',inp('number',regForm.uf,'r-uf'))}
+        </div>`)}
+      </div>
+    </div>
+    <button class="btn ${isEdit?'btn-yellow':'btn-green'} btn-full" id="r-save" style="margin-top:14px">
+      ${isEdit?'💾 Guardar cambios':'✅ Guardar y continuar → Lab'}
+    </button>`);
+  // Live SC calc
+  ['r-peso','r-talla'].forEach(id=>{
+    el(id).addEventListener('input',()=>{
+      const p=num(el('r-peso').value),t=num(el('r-talla').value);
+      el('r-sc').value=p&&t?Math.sqrt((p*t)/3600).toFixed(2):'';
+    });
+  });
+  el('r-save').addEventListener('click',()=>{
+    const ap=el('r-ap').value.trim(),ed=el('r-edad').value;
+    if(!ap||!ed){alert('Apellidos y edad requeridos.');return}
+    const data={
+      ci:el('r-ci').value,apellidos:ap,nombres:el('r-nom').value,
+      edad:ed,sexo:el('r-sex').value,raza:el('r-raza').value,
+      tipoCirugia:el('r-cir').value,fevi:el('r-fevi').value,
+      peso:el('r-peso').value,talla:el('r-talla').value,
+      sc:el('r-sc').value,cec:el('r-cec').value,
+      clamp:el('r-clamp').value,uf:el('r-uf').value
+    };
+    if(isEdit){
+      patients=patients.map(p=>p.id===selectedId?{...p,...data}:p);
+    } else {
+      const np={...data,id:uid(),labs:[],gases:[],drugLogs:[],atbList:[],balances:[],evolutions:[],createdAt:ts()};
+      patients.push(np);selectedId=np.id;
+    }
+    savePts();goTab('lab');
+  });
+}
+
+// ── LAB ───────────────────────────────────────────────────────────────
+function renderLab(){
+  const pt=getPt();
+  if(!pt){render(noPatientHtml());return}
+  const ll=pt.labs?.[pt.labs.length-1]||{};
+  const mdrd=ll.mdrd,cg=ll.cg,stage=ckdStage(mdrd);
+  const histHtml=pt.labs?.length?card('Historial de laboratorio',`<div style="overflow-x:auto"><table>
+    <tr><th>Día</th><th>Hb</th><th>Lac</th><th>Cr</th><th>SII</th><th>NLR</th><th>MDRD</th><th>Hora</th></tr>
+    ${[...pt.labs].reverse().map(r=>{const ix=labIdx(r.neutrofilos,r.linfocitos,r.plaquetas);return`<tr>
+      <td>${chip(r.dia)}</td>
+      <td style="color:${num(r.hb)<8?'#B8000F':num(r.hb)<10?'#A85000':'inherit'};font-weight:600">${r.hb||'—'}</td>
+      <td style="color:${num(r.lactato)>4?'#B8000F':num(r.lactato)>2?'#A85000':'inherit'};font-weight:600">${r.lactato||'—'}</td>
+      <td style="color:${num(r.creatinina)>2?'#B8000F':num(r.creatinina)>1.2?'#A85000':'inherit'}">${r.creatinina||'—'}</td>
+      <td style="color:${ix.sii>1000?'#B8000F':ix.sii>600?'#A85000':'inherit'};font-weight:600">${ix.sii?fmt(ix.sii,0):'—'}</td>
+      <td style="color:${ix.nlr>6?'#B8000F':ix.nlr>3?'#A85000':'inherit'}">${ix.nlr?fmt(ix.nlr,2):'—'}</td>
+      <td style="color:${r.mdrd&&r.mdrd<30?'#B8000F':r.mdrd&&r.mdrd<60?'#A85000':'inherit'}">${r.mdrd?fmt(r.mdrd,0):'—'}</td>
+      <td style="font-size:11px;color:#8896B0">${fmtTs(r.savedAt)}</td>
+    </tr>`}).join('')}
+  </table></div>`):'';
+
+  render(`${ptBarHtml()}
+  <div class="tg">
+    ${card('Nuevo registro de laboratorio',`
+      ${abox('info','💡 Hemograma dividido por 1000. Ej: Neut 7800 → <strong>7.8</strong> · Plaq 230000 → <strong>230</strong>')}
+      ${fld('Día clínico',sel('l-dia',dayOpts,'Día 0'))}
+      ${div('Hemograma')}
+      <div class="g2">
+        ${fld('Neutrófilos (miles/µL)',inp('number','','l-neut','Ej: 7.8'))}
+        ${fld('Linfocitos (miles/µL)',inp('number','','l-linf','Ej: 1.2'))}
+        ${fld('Plaquetas (miles/µL)',inp('number','','l-plaq','Ej: 230'))}
+        ${fld('Hemoglobina (g/dL)',`<input type="number" id="l-hb" step="0.1" placeholder="Ej: 12.5" style="border-color:#1A7A4A"/>`,'Necesaria para Fick/DO₂')}
+      </div>
+      <div id="l-idx-grid" style="display:none;margin:10px 0"></div>
+      ${div('Bioquímica')}
+      <div class="g2">
+        ${fld('Lactato (mmol/L)',inp('number','','l-lac'))}
+        ${fld('Creatinina (mg/dL)',inp('number','','l-crea'))}
+        ${fld('Troponina (ng/mL)',inp('number','','l-trop'))}
+        ${fld('Bilirrubina (mg/dL)',inp('number','','l-bili'))}
+        ${fld('Glasgow (3-15)',inp('number','','l-gcs'))}
+      </div>
+      <div id="l-renal" style="display:none"></div>
+      <div id="l-alerts"></div>
+      <button class="btn btn-green btn-full" id="l-save">➕ Agregar registro</button>
+    `,'','#1A6FBF')}
+    <div>${histHtml}</div>
+  </div>`);
+
+  // Live index calculation
+  ['l-neut','l-linf','l-plaq'].forEach(id=>el(id).addEventListener('input',updateLabIdx));
+  ['l-lac'].forEach(id=>el(id).addEventListener('input',updateLabAlerts));
+  el('l-crea').addEventListener('input',updateRenal);
+
+  function updateLabIdx(){
+    const n=el('l-neut').value,l=el('l-linf').value,p=el('l-plaq').value;
+    if(!n&&!l&&!p){el('l-idx-grid').style.display='none';return}
+    const ix=labIdx(n,l,p);
+    el('l-idx-grid').style.display='grid';
+    el('l-idx-grid').style.gridTemplateColumns='1fr 1fr 1fr';
+    el('l-idx-grid').style.gap='8px';
+    el('l-idx-grid').innerHTML=
+      sb('SII',fmt(ix.sii,0),'(N×P)/L',ix.sii>1000?'#B8000F':ix.sii>600?'#A85000':'#1A7A4A')+
+      sb('NLR',fmt(ix.nlr,2),'N/L',ix.nlr>6?'#B8000F':ix.nlr>3?'#A85000':'#1A7A4A')+
+      sb('PLR',fmt(ix.plr,0),'P/L',ix.plr>200?'#B8000F':ix.plr>150?'#A85000':'#1A7A4A');
+  }
+  function updateLabAlerts(){
+    const lac=num(el('l-lac').value);
+    let h='';
+    if(lac>4)h+=abox('danger','🚨 Lactato crítico '+lac+' mmol/L — shock probable');
+    else if(lac>2)h+=abox('warn','⚠ Lactato elevado '+lac+' mmol/L');
+    el('l-alerts').innerHTML=h;
+  }
+  function updateRenal(){
+    const pt=getPt();if(!pt)return;
+    const cr=el('l-crea').value;if(!cr){el('l-renal').style.display='none';return}
+    const mdrd=calcMDRD(cr,pt.edad,pt.sexo,pt.raza);
+    const cg=calcCG(cr,pt.edad,pt.sexo,pt.peso);
+    const stage=ckdStage(mdrd);
+    el('l-renal').style.display='block';
+    el('l-renal').innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:10px 0">
+      ${sb('MDRD',mdrd?fmt(mdrd,0):'—','mL/min/1.73m²',mdrd&&mdrd<30?'#B8000F':mdrd&&mdrd<60?'#A85000':'#1A7A4A')}
+      ${sb('Cockcroft-Gault',cg?fmt(cg,0):'—','mL/min',cg&&cg<30?'#B8000F':cg&&cg<60?'#A85000':'#1A7A4A')}
+      <div class="sb"><div class="sb-val" style="font-size:13px;color:${stage?.c||'#8896B0'}">${stage?.l||'—'}</div><div class="sb-lbl">Estadio ERC</div></div>
+    </div>
+    ${mdrd&&mdrd<30?abox('danger','TFG <30 — ajustar ATB nefrotóxicos'):''}
+    ${mdrd&&mdrd>=30&&mdrd<60?abox('warn','TFG 30-60 — revisar dosis'):''}`;
+  }
+  el('l-save').addEventListener('click',()=>{
+    const pt=getPt();if(!pt)return;
+    const cr=el('l-crea').value;
+    const mdrd=cr?calcMDRD(cr,pt.edad,pt.sexo,pt.raza):null;
+    const cg=cr?calcCG(cr,pt.edad,pt.sexo,pt.peso):null;
+    const entry={
+      dia:el('l-dia').value,
+      neutrofilos:el('l-neut').value,linfocitos:el('l-linf').value,plaquetas:el('l-plaq').value,
+      hb:el('l-hb').value,lactato:el('l-lac').value,creatinina:cr,
+      troponina:el('l-trop').value,bilirrubina:el('l-bili').value,glasgow:el('l-gcs').value,
+      mdrd:mdrd?+mdrd.toFixed(1):null,cg:cg?+cg.toFixed(1):null,savedAt:ts()
+    };
+    patients=patients.map(p=>p.id===selectedId?{...p,labs:[...(p.labs||[]),entry]}:p);
+    savePts();renderLab();
+  });
+}
+
+// ── GASES ─────────────────────────────────────────────────────────────
+function renderGases(){
+  const pt=getPt();if(!pt){render(noPatientHtml());return}
+  const ll=pt.labs?.[pt.labs.length-1]||{};
+  const prevLac=pt.gases?.length?pt.gases[pt.gases.length-1].lactato:'';
+  const prefillLac=ll.lactato||'';
+  const prefillHb=ll.hb||'';
+
+  const histHtml=pt.gases?.length?card('Historial gasométrico',`<div style="overflow-x:auto"><table>
+    <tr><th>Día</th><th>pH</th><th>PaO₂</th><th>ScvO₂</th><th>ΔCO₂</th><th>Lac</th><th>P/F</th><th>GC</th><th>ERO₂</th><th>Hora</th></tr>
+    ${[...pt.gases].reverse().map(g=>{
+      const ip=interpGas(g);
+      const hb=g.hb||ll.hb||'';
+      const hm=hb?calcHemo({...g,hb},pt):null;
+      return`<tr>
+        <td>${chip(g.dia)}</td>
+        <td style="color:${num(g.ph)<7.35?'#A85000':num(g.ph)>7.45?'#1A6FBF':'inherit'}">${g.ph||'—'}</td>
+        <td>${g.pao2||'—'}</td>
+        <td style="color:${num(g.scvo2)<60?'#B8000F':num(g.scvo2)<70?'#A85000':'inherit'};font-weight:600">${g.scvo2||'—'}</td>
+        <td style="color:${ip.dpco2>10?'#B8000F':ip.dpco2>6?'#A85000':'inherit'};font-weight:600">${num(g.pvco2)&&num(g.paco2)?fmt(ip.dpco2,1):'—'}</td>
+        <td style="color:${num(g.lactato)>4?'#B8000F':num(g.lactato)>2?'#A85000':'inherit'};font-weight:600">${g.lactato||'—'}</td>
+        <td style="color:${ip.pf<200?'#B8000F':ip.pf<300?'#A85000':'inherit'}">${num(g.fio2)?fmt(ip.pf,0):'—'}</td>
+        <td style="color:${hm?.gc&&hm.gc<3.5?'#B8000F':hm?.gc&&hm.gc<4.5?'#A85000':'inherit'};font-weight:600">${hm?.gc?fmt(hm.gc,1):'—'}</td>
+        <td style="color:${hm?.ero2>35?'#B8000F':hm?.ero2>30?'#A85000':'inherit'};font-weight:600">${hm?.ero2?fmt(hm.ero2,1)+'%':'—'}</td>
+        <td style="font-size:11px;color:#8896B0">${fmtTs(g.savedAt)}</td>
+      </tr>`;
+    }).join('')}
+  </table></div>`):'';
+
+  render(`${ptBarHtml()}
+  <div class="tg">
+    <div>
+      ${card('Gasometría arterial',`
+        ${fld('Día clínico',sel('g-dia',dayOpts,'Día 0'))}
+        ${div('Gasometría arterial')}
+        <div class="g3">
+          ${fld('pH',inp('number','','g-ph','7.40'))}
+          ${fld('PaO₂ (mmHg)',inp('number','','g-pao2','90'))}
+          ${fld('PaCO₂ (mmHg)',inp('number','','g-paco2','40'))}
+          ${fld('HCO₃ (mEq/L)',inp('number','','g-hco3','24'))}
+          ${fld('BE (mEq/L)',inp('number','','g-be','0'))}
+          ${fld('SaO₂ (%)',inp('number','','g-sao2','98'))}
+          ${fld('FiO₂ (%)',inp('number','','g-fio2','21'),'21=aire')}
+          ${fld('FC (lpm)',inp('number','','g-hr',''),'Para VO₂ La Farge')}
+        </div>
+        ${div('Gasometría venosa central')}
+        <div class="g3">
+          ${fld('PvCO₂ (mmHg)',inp('number','','g-pvco2','46'))}
+          ${fld('PvO₂ (mmHg)',inp('number','','g-pvo2','40'),'Para CvO₂')}
+          ${fld('ScvO₂ / SvO₂ (%)',inp('number','','g-scvo2','70'),'Saturación venosa')}
+        </div>
+        ${div('Lactato')}
+        <div class="g2">
+          ${fld('Lactato actual (mmol/L)',`<input type="number" id="g-lac" step="0.1" value="${esc(prefillLac)}"/>`,prefillLac?'Pre-cargado del último lab':'')}
+          ${fld('Lactato previo (mmol/L)',`<input type="number" id="g-lacb" step="0.1" placeholder="${esc(prevLac||'')}"/>`,prevLac?'Último: '+prevLac:'')}
+        </div>
+        ${div('Hemoglobina')}
+        ${fld('Hb (g/dL)',`<input type="number" id="g-hb" step="0.1" value="${esc(prefillHb)}" placeholder="${esc(prefillHb||'Ej: 12.5')}" style="border-color:${prefillHb?'#1A7A4A':'#DDE3EE'}"/>`,prefillHb?'Pre-cargado del último lab':'Cargala en Lab para auto-rellenar')}
+        <button class="btn btn-green btn-full" id="g-save" style="margin-top:8px">➕ Agregar gasometría</button>
+      `,'','#1A6FBF')}
+    </div>
+    <div>
+      <div id="g-results"></div>
+    </div>
+  </div>
+  ${histHtml}`);
+
+  function updateResults(){
+    const gd={
+      ph:el('g-ph').value,pao2:el('g-pao2').value,paco2:el('g-paco2').value,
+      hco3:el('g-hco3').value,be:el('g-be').value,sao2:el('g-sao2').value,
+      fio2:el('g-fio2').value||'21',pvco2:el('g-pvco2').value,pvo2:el('g-pvo2').value,
+      scvo2:el('g-scvo2').value,lactato:el('g-lac').value,lacBasal:el('g-lacb').value,
+      hb:el('g-hb').value||prefillHb,hr:el('g-hr').value
+    };
+    if(!gd.pao2&&!gd.scvo2&&!gd.lactato){el('g-results').innerHTML='';return}
+    const ip=interpGas(gd);
+    const hm=gd.hb?calcHemo(gd,pt):null;
+    let h='';
+    // Basic interp
+    const bgc=ip.pc==='#B8000F'?'#FDEBEC':ip.pc==='#A85000'?'#FEF3E2':'#E6F5EE';
+    h+=`<div class="card al" style="--ac:${ip.pc};margin-bottom:12px"><div class="card-h"><span class="card-t">Perfil hemodinámico</span></div><div class="card-b">
+      <div style="background:${bgc};border:2px solid ${ip.pc};border-radius:9px;padding:11px 14px;margin-bottom:10px;font-size:14px;font-weight:700;color:${ip.pc}">${ip.perfil}</div>
+      <div class="g3">
+        ${sb('Delta PCO₂',num(gd.pvco2)&&num(gd.paco2)?fmt(ip.dpco2,1):'—','mmHg',ip.dpco2>10?'#B8000F':ip.dpco2>6?'#A85000':'#1A7A4A',ip.dpco2>10?'Bajo GC':ip.dpco2>6?'Limítrofe':'Normal')}
+        ${sb('Lac Clearance',ip.lacClear!=null?fmt(ip.lacClear,1):'—','%',ip.lacClear!=null?(ip.lacClear>=10?'#1A7A4A':'#A85000'):'#8896B0',ip.lacClear!=null?(ip.lacClear>=10?'Adecuado':'Insuficiente'):'Ingresar lac previo')}
+        ${sb('P/F ratio',num(gd.fio2)?fmt(ip.pf,0):'—','',ip.pf<200?'#B8000F':ip.pf<300?'#A85000':'#1A7A4A',ip.pfLbl)}
+      </div>
+      ${num(gd.ph)<7.35?abox('warn','pH '+gd.ph+' — Acidemia'):''}
+      ${num(gd.ph)>7.45?abox('info','pH '+gd.ph+' — Alcalemia'):''}
+      ${num(gd.be)<-4?abox('warn','BE '+gd.be+' — Acidosis metabólica'):''}
+    </div></div>`;
+    // Fick
+    if(hm){
+      const fbg=hm.pc==='#B8000F'?'#FDEBEC':hm.pc==='#A85000'?'#FEF3E2':'#E6F5EE';
+      h+=`<div class="card al" style="--ac:${hm.pc}"><div class="card-h"><span class="card-t">🫀 Fick — Hemodinámica</span></div><div class="card-b">
+        ${hm.gc?`<div style="background:${fbg};border:2px solid ${hm.pc};border-radius:9px;padding:10px 14px;margin-bottom:10px;font-size:13px;font-weight:700;color:${hm.pc}">${hm.perfil}</div>`:''}
+        ${div('Contenido de O₂')}
+        <div class="g2" style="margin-bottom:10px">
+          ${sb('CaO₂',fmt(hm.cao2,2),'mL O₂/dL','#1A6FBF','Contenido arterial')}
+          ${sb('CvO₂',hm.cvo2!=null?fmt(hm.cvo2,2):'—','mL O₂/dL','#4A5568','Contenido venoso')}
+        </div>
+        ${hm.avdo2!=null?`<div style="background:#F0F3FA;border-radius:8px;padding:9px 13px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;border:1px solid #DDE3EE">
+          <span style="font-size:12px;color:#4A5568;font-weight:600">Diferencia a-v O₂</span>
+          <span style="font-family:monospace;font-size:18px;font-weight:700;color:${hm.avdo2>6?'#B8000F':hm.avdo2>4?'#A85000':'#1A7A4A'}">${fmt(hm.avdo2,2)} <span style="font-size:11px">mL/dL</span></span>
+        </div>`:''}
+        ${div('Gasto cardíaco por Fick')}
+        <div class="g2" style="margin-bottom:10px">
+          ${sb('GC (Fick)',hm.gc?fmt(hm.gc,2):'—','L/min',hm.gc&&hm.gc<3.5?'#B8000F':hm.gc&&hm.gc<4.5?'#A85000':'#1A7A4A','',true)}
+          ${sb('IC',hm.ic?fmt(hm.ic,2):'—','L/min/m²',hm.ic&&hm.ic<1.8?'#B8000F':hm.ic&&hm.ic<2.2?'#A85000':'#1A7A4A','Normal >2.2',true)}
+        </div>
+        ${div('Entrega y consumo de O₂')}
+        <div class="g4" style="margin-bottom:10px">
+          ${sb('DO₂',hm.do2?fmt(hm.do2,0):'—','mL O₂/min',hm.do2&&hm.do2<500?'#B8000F':'#1A7A4A','Entrega')}
+          ${sb('DO₂i',hm.do2i?fmt(hm.do2i,0):'—','mL/min/m²',hm.do2i&&hm.do2i<450?'#B8000F':'#1A7A4A','>450')}
+          ${sb('VO₂ est.',hm.vo2est?fmt(hm.vo2est,0):'—','mL/min','#1A6FBF','La Farge')}
+          ${sb('VO₂ real',hm.vo2real?fmt(hm.vo2real,0):'—','mL/min','#1A6FBF','Fick')}
+        </div>
+        <div style="background:${hm.ero2>35?'#FDEBEC':hm.ero2>30?'#FEF3E2':'#E6F5EE'};border:2px solid ${hm.ero2>35?'#B8000F':hm.ero2>30?'#A85000':'#1A7A4A'};border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#4A5568">ERO₂ — Extracción de O₂</div>
+            <div style="font-size:11px;color:#8896B0;margin-top:2px">Normal 20-30% · >35% crítica</div>
+          </div>
+          <div style="font-family:monospace;font-size:28px;font-weight:700;color:${hm.ero2>35?'#B8000F':hm.ero2>30?'#A85000':'#1A7A4A'}">${hm.ero2?fmt(hm.ero2,1):'—'}<span style="font-size:14px">%</span></div>
+        </div>
+        ${hm.ero2>35?abox('danger','ERO₂ >35% — extracción crítica, aumentar DO₂'):''}
+        ${hm.do2i&&hm.do2i<450?abox('warn','DO₂i <450 — entrega de O₂ insuficiente'):''}
+        ${!hm.gc?abox('info','Ingresar ScvO₂ + PvO₂ para calcular GC por Fick'):''}
+      </div></div>`;
+    } else {
+      h+=`<div class="card""><div class="card-b">${abox('info','Ingresar Hb + ScvO₂ para calcular GC, DO₂ y ERO₂ por Fick')}</div></div>`;
+    }
+    el('g-results').innerHTML=h;
+  }
+  ['g-ph','g-pao2','g-paco2','g-hco3','g-be','g-sao2','g-fio2','g-pvco2','g-pvo2','g-scvo2','g-lac','g-lacb','g-hb','g-hr'].forEach(id=>{
+    el(id)?.addEventListener('input',updateResults);
+  });
+  updateResults();
+
+  el('g-save').addEventListener('click',()=>{
+    const entry={
+      dia:el('g-dia').value,ph:el('g-ph').value,pao2:el('g-pao2').value,paco2:el('g-paco2').value,
+      hco3:el('g-hco3').value,be:el('g-be').value,sao2:el('g-sao2').value,fio2:el('g-fio2').value||'21',
+      pvco2:el('g-pvco2').value,pvo2:el('g-pvo2').value,scvo2:el('g-scvo2').value,
+      lactato:el('g-lac').value,lacBasal:el('g-lacb').value,hb:el('g-hb').value||prefillHb,
+      hr:el('g-hr').value,savedAt:ts()
+    };
+    patients=patients.map(p=>p.id===selectedId?{...p,gases:[...(p.gases||[]),entry]}:p);
+    savePts();renderGases();
+  });
+}
+
+// ── DRUGS ─────────────────────────────────────────────────────────────
+let drugState={drug:'noradrenalina',di:0,mode:'forward',mlh:'',gT:'',nota:''};
+
+function renderDrugs(){
+  const pt=getPt();if(!pt){render(noPatientHtml());return}
+  const wt=num(pt.peso)||70;
+  const {drug,di,mode}=drugState;
+  const dil=DRUGS[drug][di];
+  const cml=(dil.mg*1000)/dil.ml;
+
+  const hist=pt.drugLogs?.length?card('Historial vasoactivos — acumulativo',`<div style="overflow-x:auto"><table>
+    <tr><th>Fármaco</th><th>Dilución</th><th>mL/h</th><th>mcg/kg/min</th><th>Nota</th><th>Hora</th></tr>
+    ${[...pt.drugLogs].reverse().map(s=>`<tr>
+      <td style="color:#1A6FBF;font-weight:700;text-transform:capitalize">${esc(s.drug)}</td>
+      <td style="font-size:11px;color:#8896B0">${esc(s.dilution)}</td>
+      <td style="font-family:monospace;font-weight:600">${fmt(s.mlh,2)}</td>
+      <td style="font-family:monospace;font-weight:700;color:${dColor(s.drug,s.gamma)}">${fmt(s.gamma,4)}</td>
+      <td style="font-size:11px;color:#4A5568">${esc(s.nota||'—')}</td>
+      <td style="font-size:11px;color:#8896B0">${fmtTs(s.savedAt)}</td>
+    </tr>`).join('')}
+  </table></div>`):'';
+
+  render(`${ptBarHtml()}
+  <div class="tg">
+    ${card('Calculadora vasoactivos',`
+      <div class="g2">
+        <div>${fld('Fármaco',`<select id="dr-drug">${Object.keys(DRUGS).map(d=>`<option${d===drug?' selected':''}>${d.charAt(0).toUpperCase()+d.slice(1)}</option>`).join('')}</select>`)}</div>
+        <div>${fld('Dilución',`<select id="dr-di">${DRUGS[drug].map((d,i)=>`<option value="${i}"${i===di?' selected':''}>${d.l}</option>`).join('')}</select>`)}</div>
+      </div>
+      <div style="background:#EBF3FC;border:1.5px solid rgba(26,111,191,.3);border-radius:8px;padding:10px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12px;color:#4A5568;font-weight:600">Concentración</span>
+        <span id="dr-conc" style="font-family:monospace;font-size:20px;color:#1A6FBF;font-weight:700">${fmt(cml,2)} mcg/mL</span>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <button class="btn btn-sm${mode==='forward'?' btn-fill':' btn-outline'}" id="dr-mf" style="${mode!=='forward'?'color:#1A6FBF;border-color:#1A6FBF':''}" data-mode="forward">mL/h → γ</button>
+        <button class="btn btn-sm${mode==='inverse'?' btn-fill':' btn-outline'}" id="dr-mi" style="${mode!=='inverse'?'color:#1A6FBF;border-color:#1A6FBF':''}" data-mode="inverse">γ → mL/h</button>
+      </div>
+      <div class="g2">
+        <div>${fld('Peso (kg)',`<input type="text" value="${wt} kg" disabled/>`)}</div>
+        <div id="dr-input-wrap">${mode==='forward'?fld('mL/h',`<input type="number" id="dr-mlh" step="0.1" value="${drugState.mlh}"/>`):fld('Dosis objetivo (mcg/kg/min)',`<input type="number" id="dr-gt" step="0.001" value="${drugState.gT}"/>`)}</div>
+      </div>
+      <div id="dr-result"></div>
+      ${fld('Nota clínica',inp('text',drugState.nota,'dr-nota','Ej: Post-CEC, PAM 55 mmHg'),'Opcional')}
+      <button class="btn btn-green btn-full" id="dr-save">➕ Registrar en historial</button>
+    `,'Peso: '+wt+' kg · '+(pt.drugLogs?.length||0)+' registros','#1A6FBF')}
+    <div>${hist}</div>
+  </div>`);
+
+  function calcResult(){
+    const pt=getPt();if(!pt)return;
+    const wt=num(pt.peso)||70;
+    const drug=drugState.drug,di=drugState.di;
+    const dil=DRUGS[drug][di];
+    const cml=(dil.mg*1000)/dil.ml;
+    el('dr-conc').textContent=fmt(cml,2)+' mcg/mL';
+    let h='';
+    if(drugState.mode==='forward'&&num(drugState.mlh)){
+      const mlh=num(drugState.mlh);
+      const cmin=(cml*mlh)/60;const gamma=cmin/wt;const mgh=(cml*mlh)/1000;
+      const dc=dColor(drug,gamma);
+      h+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0">
+        ${sb('γ mcg/kg/min',fmt(gamma,4),'',dc,'',true)}
+        ${sb('mcg/min',fmt(cmin,2))}
+        ${sb('mg/h',fmt(mgh,3))}
+        ${sb('mcg/mL',fmt(cml,2))}
+      </div>`;
+      const lbl=dc==='#1A7A4A'?'✅ Dosis normal':dc==='#A85000'?'⚠ Dosis intermedia':'🚨 Dosis alta';
+      const atype=dc==='#1A7A4A'?'ok':dc==='#A85000'?'warn':'danger';
+      h+=abox(atype,lbl+' — '+fmt(gamma,4)+' mcg/kg/min');
+    } else if(drugState.mode==='inverse'&&num(drugState.gT)){
+      const gT=num(drugState.gT);
+      const invMLH=(gT*wt*60)/cml;
+      const dc=dColor(drug,gT);
+      h+=`<div style="margin:10px 0">${sb('Velocidad necesaria',fmt(invMLH,2),'mL/h',dc,'',true)}</div>`;
+      const atype=dc==='#1A7A4A'?'ok':dc==='#A85000'?'warn':'danger';
+      h+=abox(atype,'Para '+gT+' mcg/kg/min → '+fmt(invMLH,2)+' mL/h');
+    }
+    el('dr-result').innerHTML=h;
+  }
+
+  el('dr-drug').addEventListener('change',function(){
+    drugState.drug=Object.keys(DRUGS)[this.selectedIndex];
+    drugState.di=0;renderDrugs();
+  });
+  el('dr-di').addEventListener('change',function(){drugState.di=parseInt(this.value);calcResult();});
+  document.querySelectorAll('[data-mode]').forEach(b=>{
+    b.addEventListener('click',function(){
+      drugState.mode=this.dataset.mode;drugState.mlh='';drugState.gT='';renderDrugs();
+    });
+  });
+  const inputId=drugState.mode==='forward'?'dr-mlh':'dr-gt';
+  el(inputId)?.addEventListener('input',function(){
+    if(drugState.mode==='forward')drugState.mlh=this.value;
+    else drugState.gT=this.value;
+    calcResult();
+  });
+  el('dr-save').addEventListener('click',()=>{
+    const pt=getPt();if(!pt)return;
+    const wt=num(pt.peso)||70;
+    const {drug,di,mode}=drugState;
+    const dil=DRUGS[drug][di];
+    const cml=(dil.mg*1000)/dil.ml;
+    let mlh,gamma;
+    if(mode==='forward'&&num(drugState.mlh)){
+      mlh=num(drugState.mlh);gamma=(cml*mlh/60)/wt;
+    } else if(mode==='inverse'&&num(drugState.gT)){
+      gamma=num(drugState.gT);mlh=(gamma*wt*60)/cml;
+    } else return;
+    const entry={id:uid(),drug,dilution:dil.l,mlh:+mlh.toFixed(2),gamma:+gamma.toFixed(4),weight:wt,nota:el('dr-nota').value,savedAt:ts()};
+    patients=patients.map(p=>p.id===selectedId?{...p,drugLogs:[...(p.drugLogs||[]),entry]}:p);
+    savePts();drugState.mlh='';drugState.gT='';drugState.nota='';renderDrugs();
+  });
+  calcResult();
+}
+
+// ── ATB ───────────────────────────────────────────────────────────────
+function renderATB(){
+  const pt=getPt();if(!pt){render(noPatientHtml());return}
+  const ll=pt.labs?.[pt.labs.length-1]||{};
+  const tfg=ll.mdrd||ll.cg||null;
+  const selAtb=ATBS[0];
+
+  const scheme=pt.atbList?.length?card('Esquema ATB activo — '+pt.atbList.length+' fármaco(s)',
+    pt.atbList.map(a=>`<div style="background:#F0F3FA;border-radius:9px;padding:12px;margin-bottom:8px;border:1.5px solid #DDE3EE">
+      <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start">
+        <div style="flex:1">
+          <div style="font-weight:700;color:#1A6FBF;font-size:14px">${esc(a.name)}</div>
+          <div style="font-size:12px;color:#18243A;margin-top:2px;font-weight:500">${esc(a.std)}</div>
+          <div style="font-size:11px;color:#8896B0;margin-top:3px">Inicio: ${esc(a.startDay)} · ${new Date(a.addedAt).toLocaleDateString()}</div>
+          ${a.nota?`<div style="font-size:12px;color:#A85000;margin-top:3px">📝 ${esc(a.nota)}</div>`:''}
+          ${a.needsAdj?`<div style="font-size:11px;color:#B8000F;margin-top:3px;font-weight:600">⚠ Ajuste renal (TFG ${fmt(a.tfg,0)} mL/min)</div>`:''}
+        </div>
+        <button class="btn btn-outline btn-sm" style="color:#B8000F;border-color:#B8000F;flex-shrink:0" onclick="rmAtb('${a.id}')">✕</button>
+      </div>
+    </div>`).join('')
+  ,'','#A85000'):'';
+
+  render(`${ptBarHtml()}
+  <div class="tg">
+    ${card('Agregar ATB — Sanford',`
+      ${tfg?`<div style="background:#EBF3FC;border:1.5px solid rgba(26,111,191,.3);border-radius:8px;padding:10px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12px;color:#4A5568;font-weight:600">TFG del paciente</span>
+        <span style="font-family:monospace;font-size:18px;font-weight:700;color:${tfg<30?'#B8000F':tfg<60?'#A85000':'#1A7A4A'}">${fmt(tfg,0)} mL/min</span>
+      </div>`:''}
+      ${fld('Antibiótico',`<select id="atb-sel">${ATBS.map((a,i)=>`<option value="${i}">${esc(a.n)}</option>`).join('')}</select>`)}
+      <div id="atb-info" style="background:#F0F3FA;border-radius:9px;padding:14px;margin-bottom:12px;border:1.5px solid #DDE3EE">
+        <div style="font-size:11px;color:#8896B0;margin-bottom:4px;font-weight:600;text-transform:uppercase">Dosis estándar</div>
+        <div id="atb-std" style="font-size:14px;color:#18243A;font-weight:600;margin-bottom:8px">${esc(ATBS[0].s)}</div>
+        <div id="atb-adj" style="font-size:11px;color:#4A5568;padding-top:8px;border-top:1px solid #DDE3EE">${esc(ATBS[0].a)}</div>
+      </div>
+      <div id="atb-alert"></div>
+      <div class="g2">
+        ${fld('Día de inicio',sel('atb-day',dayOpts,'Día 0'))}
+        ${fld('Indicación / cultivo',inp('text','','atb-nota','Ej: hemocultivo +'))}
+      </div>
+      <button class="btn btn-green btn-full" id="atb-add">➕ Agregar al esquema</button>
+    `,'','#1A6FBF')}
+    <div>${scheme}</div>
+  </div>`);
+
+  function updateAtbInfo(){
+    const i=parseInt(el('atb-sel').value);
+    const a=ATBS[i];
+    el('atb-std').textContent=a.s;
+    el('atb-adj').textContent=a.a;
+    const needsAdj=tfg!=null&&tfg<a.t&&a.t>0;
+    let h='';
+    if(needsAdj)h=abox('danger','⚠ TFG '+fmt(tfg,0)+' mL/min — AJUSTE RENAL: '+a.a);
+    else if(tfg&&a.t>0)h=abox('ok','TFG adecuada — sin ajuste para este ATB');
+    else if(a.t===0)h=abox('info','Sin ajuste renal requerido');
+    el('atb-alert').innerHTML=h;
+  }
+  el('atb-sel').addEventListener('change',updateAtbInfo);
+  updateAtbInfo();
+
+  el('atb-add').addEventListener('click',()=>{
+    const i=parseInt(el('atb-sel').value);const a=ATBS[i];
+    const needsAdj=tfg!=null&&tfg<a.t&&a.t>0;
+    const entry={id:uid(),name:a.n,std:a.s,adj:a.a,startDay:el('atb-day').value,tfg,needsAdj,nota:el('atb-nota').value,addedAt:ts()};
+    patients=patients.map(p=>p.id===selectedId?{...p,atbList:[...(p.atbList||[]),entry]}:p);
+    savePts();renderATB();
+  });
+}
+window.rmAtb=id=>{patients=patients.map(p=>p.id===selectedId?{...p,atbList:(p.atbList||[]).filter(a=>a.id!==id)}:p);savePts();renderATB()};
+
+// ── BALANCE ───────────────────────────────────────────────────────────
+function renderBalance(){
+  const pt=getPt();if(!pt){render(noPatientHtml());return}
+  const insens=num(pt.peso)*8;
+  const acum=(pt.balances||[]).reduce((s,b)=>s+(b.balance||0),0);
+  const hist=pt.balances?.length?card('Historial de balances',`<div style="overflow-x:auto"><table>
+    <tr><th>Día</th><th>Ingresos</th><th>Egresos</th><th>Balance</th><th>Fecha</th></tr>
+    ${[...pt.balances].reverse().map(b=>`<tr>
+      <td>${chip(b.dia)}</td>
+      <td style="color:#1A7A4A;font-family:monospace;font-weight:600">${Math.round(b.totalIng||0).toLocaleString()}</td>
+      <td style="color:#B8000F;font-family:monospace;font-weight:600">${Math.round(b.totalEgr||0).toLocaleString()}</td>
+      <td style="font-family:monospace;font-weight:700;color:${b.balance>1000?'#A85000':b.balance<-500?'#B8000F':'#1A7A4A'}">${b.balance>=0?'+':''}${Math.round(b.balance||0).toLocaleString()}</td>
+      <td style="font-size:11px;color:#8896B0">${fmtTs(b.savedAt)}</td>
+    </tr>`).join('')}
+  </table></div>`):'';
+
+  render(`${ptBarHtml()}
+  <div class="tg">
+    ${card('Balance hídrico 24h',`
+      ${fld('Día clínico',sel('b-dia',dayOpts,'Día 0'))}
+      ${div('Ingresos')}
+      <div class="g2">
+        ${fld('Cristaloides (mL)',inp('number','','b-i1'))}
+        ${fld('Coloides (mL)',inp('number','','b-i2'))}
+        ${fld('Glóbulos rojos (mL)',inp('number','','b-i3'))}
+        ${fld('PFC (mL)',inp('number','','b-i4'))}
+        ${fld('Plaquetas (mL)',inp('number','','b-i5'))}
+        ${fld('Nutrición enteral (mL)',inp('number','','b-i6'))}
+        ${fld('Nutrición parenteral (mL)',inp('number','','b-i7'))}
+        ${fld('Medicamentos IV (mL)',inp('number','','b-i8'))}
+        ${fld('Vía oral (mL)',inp('number','','b-i9'),'','span2')}
+      </div>
+      <div style="background:#E6F5EE;border:1.5px solid #1A7A4A;border-radius:8px;padding:10px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:13px;color:#1A7A4A;font-weight:700">Total ingresos</span>
+        <span id="b-ting" style="font-family:monospace;font-size:20px;color:#1A7A4A;font-weight:700">0 mL</span>
+      </div>
+      ${div('Egresos')}
+      <div class="g2">
+        ${fld('Diuresis (mL)',inp('number','','b-e1'))}
+        ${fld('Drenaje mediastinal (mL)',inp('number','','b-e2'))}
+        ${fld('Drenaje pleural (mL)',inp('number','','b-e3'))}
+        ${fld('SNG / gástrico (mL)',inp('number','','b-e4'))}
+        ${fld('Otros (mL)',inp('number','','b-e5'),'','span2')}
+      </div>
+      <div style="background:#F0F3FA;border-radius:7px;padding:8px 12px;margin-bottom:8px;display:flex;justify-content:space-between;font-size:12px;border:1px solid #DDE3EE">
+        <span style="color:#8896B0">Pérdidas insensibles (8 mL/kg × ${pt.peso||'?'} kg)</span>
+        <span style="color:#8896B0;font-family:monospace">${insens} mL</span>
+      </div>
+      <div style="background:#FDEBEC;border:1.5px solid #B8000F;border-radius:8px;padding:10px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:13px;color:#B8000F;font-weight:700">Total egresos</span>
+        <span id="b-tegr" style="font-family:monospace;font-size:20px;color:#B8000F;font-weight:700">0 mL</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div class="sb"><div class="sb-val lg" id="b-bal" style="color:#1A7A4A">+0</div><div class="sb-unit">mL</div><div class="sb-lbl">Balance del día</div></div>
+        <div class="sb"><div class="sb-val lg" style="color:${acum>2000?'#B8000F':acum>500?'#A85000':'#1A7A4A'}">${acum>=0?'+':''}${Math.round(acum)}</div><div class="sb-unit">mL</div><div class="sb-lbl">Balance acumulado</div></div>
+      </div>
+      <div id="b-alerts"></div>
+      ${fld('Notas',`<textarea id="b-notas" rows="2" style="resize:vertical"></textarea>`)}
+      <button class="btn btn-green btn-full" id="b-save">➕ Registrar balance</button>
+    `,'Acumulado: '+(acum>=0?'+':'')+Math.round(acum)+' mL','#1A6FBF')}
+    <div>${hist}</div>
+  </div>`);
+
+  function calcBal(){
+    const ing=['b-i1','b-i2','b-i3','b-i4','b-i5','b-i6','b-i7','b-i8','b-i9'].reduce((s,id)=>s+num(el(id)?.value),0);
+    const egr=['b-e1','b-e2','b-e3','b-e4','b-e5'].reduce((s,id)=>s+num(el(id)?.value),0)+insens;
+    const bal=ing-egr;
+    el('b-ting').textContent=Math.round(ing).toLocaleString()+' mL';
+    el('b-tegr').textContent=Math.round(egr).toLocaleString()+' mL';
+    const bEl=el('b-bal');
+    bEl.textContent=(bal>=0?'+':'')+Math.round(bal);
+    bEl.style.color=bal>1000?'#A85000':bal<-500?'#B8000F':'#1A7A4A';
+    let h='';
+    if(bal>1000)h+=abox('warn','Balance positivo >1L — vigilar sobrecarga');
+    if(bal<-500)h+=abox('warn','Balance negativo — vigilar hipovolemia');
+    if(acum>2000)h+=abox('danger','Balance acumulado >2L');
+    el('b-alerts').innerHTML=h;
+    return{ing,egr,bal};
+  }
+  ['b-i1','b-i2','b-i3','b-i4','b-i5','b-i6','b-i7','b-i8','b-i9','b-e1','b-e2','b-e3','b-e4','b-e5'].forEach(id=>el(id)?.addEventListener('input',calcBal));
+  el('b-save').addEventListener('click',()=>{
+    const {ing,egr,bal}=calcBal();
+    const entry={
+      dia:el('b-dia').value,
+      ingCristaloides:el('b-i1').value,ingColoides:el('b-i2').value,ingGR:el('b-i3').value,
+      ingPFC:el('b-i4').value,ingPlaq:el('b-i5').value,ingNutricionE:el('b-i6').value,
+      ingNutricionP:el('b-i7').value,ingMed:el('b-i8').value,ingOral:el('b-i9').value,
+      egrDiuresis:el('b-e1').value,egrMed:el('b-e2').value,egrPleural:el('b-e3').value,
+      egrSNG:el('b-e4').value,egrOtros:el('b-e5').value,
+      notasBal:el('b-notas').value,totalIng:ing,totalEgr:egr,insens,balance:bal,savedAt:ts()
+    };
+    patients=patients.map(p=>p.id===selectedId?{...p,balances:[...(p.balances||[]),entry]}:p);
+    savePts();renderBalance();
+  });
+}
+
+// ── EVOLUTION ─────────────────────────────────────────────────────────
+const NAMEMP={noradrenalina:'norepiDose',adrenalina:'epiDose',dobutamina:'dobutaDose',milrinona:'milriDose',vasopresina:'vasopressinDose',dopamina:'dopaDose'};
+function getLatestDoses(dl){
+  const m={norepiDose:'',epiDose:'',dobutaDose:'',milriDose:'',vasopressinDose:'',dopaDose:''};
+  if(!dl?.length)return m;
+  [...dl].reverse().forEach(l=>{const k=NAMEMP[l.drug];if(k&&!m[k])m[k]=String(l.gamma);});
+  return m;
+}
+
+function renderEvolution(){
+  const pt=getPt();if(!pt){render(noPatientHtml());return}
+  const ll=pt.labs?.[pt.labs.length-1]||{};
+  const doses=getLatestDoses(pt.drugLogs);
+  const hasDoses=Object.values(doses).some(v=>v);
+  const prefillVaso=hasDoses?'Sí':'No';
+
+  const drugHistHtml=pt.drugLogs?.length?card('Historial vasoactivos — referencia',`<div style="overflow-x:auto"><table>
+    <tr><th>Fármaco</th><th>mL/h</th><th>γ</th><th>Nota</th><th>Hora</th></tr>
+    ${[...pt.drugLogs].reverse().slice(0,8).map(s=>`<tr>
+      <td style="color:#1A6FBF;font-weight:700;text-transform:capitalize;font-size:12px">${esc(s.drug)}</td>
+      <td style="font-family:monospace;font-size:12px">${fmt(s.mlh,2)}</td>
+      <td style="font-family:monospace;font-weight:700;color:${dColor(s.drug,s.gamma)};font-size:12px">${fmt(s.gamma,4)}</td>
+      <td style="font-size:11px;color:#4A5568">${esc(s.nota||'—')}</td>
+      <td style="font-size:11px;color:#8896B0">${fmtTs(s.savedAt)}</td>
+    </tr>`).join('')}
+  </table></div>`):'';
+
+  const hist=pt.evolutions?.length?card('Historial evoluciones',`<div style="overflow-x:auto"><table>
+    <tr><th>Día</th><th>Lac</th><th>PAM</th><th>VIS</th><th>SOFA</th><th>Norepi</th><th>VM</th><th>Hora</th></tr>
+    ${[...pt.evolutions].reverse().map(e=>`<tr>
+      <td>${chip(e.dia)}</td>
+      <td style="color:${num(e.lactato)>4?'#B8000F':num(e.lactato)>2?'#A85000':'inherit'};font-weight:600">${e.lactato||'—'}</td>
+      <td style="color:${num(e.map)<65&&num(e.map)>0?'#A85000':'inherit'}">${e.map||'—'}</td>
+      <td style="color:${e.vis>40?'#B8000F':e.vis>20?'#A85000':'#1A7A4A'};font-weight:700">${fmt(e.vis,1)}</td>
+      <td style="color:${e.sofa>=10?'#B8000F':e.sofa>=6?'#A85000':'#1A7A4A'};font-weight:700">${e.sofa}</td>
+      <td style="font-family:monospace;font-size:12px;color:${num(e.norepiDose)>0.3?'#B8000F':num(e.norepiDose)>0.1?'#A85000':'inherit'}">${e.norepiDose||'—'}</td>
+      <td style="font-size:11px;color:#4A5568">${esc(e.vm)}</td>
+      <td style="font-size:11px;color:#8896B0">${fmtTs(e.savedAt)}</td>
+    </tr>`).join('')}
+  </table></div>`):'';
+
+  render(`${ptBarHtml()}
+  ${abox('info','💡 Drogas precargadas del historial · Lab prellenado del último registro · Editá solo lo que cambió')}
+  <div class="tg">
+    <div>
+      ${card('Nueva evolución',`
+        ${fld('Día clínico',sel('ev-dia',dayOpts,'Día 0'))}
+        ${div('Parámetros clínicos')}
+        <div class="g2">
+          ${fld('Lactato (mmol/L)',`<input type="number" id="ev-lac" step="0.1" value="${esc(ll.lactato||'')}"/>`)}
+          ${fld('Troponina (ng/mL)',`<input type="number" id="ev-trop" step="0.001" value="${esc(ll.troponina||'')}"/>`)}
+          ${fld('Creatinina (mg/dL)',`<input type="number" id="ev-crea" step="0.01" value="${esc(ll.creatinina||'')}"/>`)}
+          ${fld('Diuresis (mL/24h)',inp('number','','ev-diu'))}
+          ${fld('PAM (mmHg)',inp('number','','ev-map'),'','span2')}
+        </div>
+        <div id="ev-cl-alerts"></div>
+        ${div('Soporte')}
+        <div class="g2">
+          ${fld('Ventilación',sel('ev-vm',['No','VM invasiva (IOT)','VMNI','OAF'],'No'))}
+          ${fld('Vasopresores',sel('ev-vaso',['No','Sí'],prefillVaso))}
+        </div>
+        <div id="ev-drug-fields"></div>
+        ${div('VIS Score')}
+        <div style="background:#F0F3FA;border-radius:10px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;border:1.5px solid #DDE3EE;margin-bottom:10px">
+          <div>
+            <div style="font-size:12px;color:#4A5568;font-weight:600">VIS Score calculado</div>
+            <div style="font-size:11px;color:#8896B0;margin-top:2px">Dopa×1+Dobuta×1+Milri×15+Norepi×100+Epi×100+Vasop×10000</div>
+          </div>
+          <div id="ev-vis" style="font-family:monospace;font-size:32px;font-weight:700;color:#1A7A4A">0.0</div>
+        </div>
+        <div id="ev-vis-alert"></div>
+        ${div('SOFA Score')}
+        ${SOFA.map(c=>`${fld(c.l,sel('ev-'+c.k,c.o.map((o,i)=>({v:i,l:o})),0))}`).join('')}
+        <div style="background:#F0F3FA;border-radius:10px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;border:1.5px solid #DDE3EE;margin:10px 0">
+          <div><div style="font-size:12px;color:#4A5568;font-weight:600">SOFA Total</div><div style="font-size:11px;color:#8896B0;margin-top:2px">≥2 disfunción · ≥6 falla · ≥10 mortalidad >50%</div></div>
+          <div id="ev-sofa" style="font-family:monospace;font-size:32px;font-weight:700;color:#1A7A4A">0</div>
+        </div>
+        <div id="ev-sofa-alert"></div>
+        ${div('Notas')}
+        <textarea id="ev-notas" rows="2" style="resize:vertical;width:100%" placeholder="Evolución clínica libre..."></textarea>
+        <button class="btn btn-green btn-full" id="ev-save" style="margin-top:12px">➕ Registrar evolución</button>
+      `,'','#1A6FBF')}
+    </div>
+    <div>${drugHistHtml}${hist}</div>
+  </div>`);
+
+  function renderDrugFields(){
+    const vaso=el('ev-vaso')?.value;
+    if(vaso!=='Sí'){el('ev-drug-fields').innerHTML='';return}
+    el('ev-drug-fields').innerHTML=`
+      ${abox('warn','✏ Dosis precargadas del último cálculo. Modificá si cambiaron.')}
+      <div class="g2">
+        ${[
+          ['ev-norepiDose','Norepinefrina (mcg/kg/min)',doses.norepiDose,'0.001'],
+          ['ev-epiDose','Adrenalina (mcg/kg/min)',doses.epiDose,'0.001'],
+          ['ev-dobutaDose','Dobutamina (mcg/kg/min)',doses.dobutaDose,'0.1'],
+          ['ev-milriDose','Milrinona (mcg/kg/min)',doses.milriDose,'0.001'],
+          ['ev-vasopressinDose','Vasopresina (U/min)',doses.vasopressinDose,'0.001'],
+          ['ev-dopaDose','Dopamina (mcg/kg/min)',doses.dopaDose,'0.1'],
+        ].map(([id,lbl,val,step])=>fld(lbl,`<input type="number" id="${id}" step="${step}" value="${esc(val)}" style="border-color:${val?'#A85000':'#DDE3EE'};border-width:${val?'2px':'1.5px'}"/>`,'','')).join('')}
+      </div>`;
+    updateScores();
+  }
+
+  function updateScores(){
+    const f={
+      norepiDose:num(el('ev-norepiDose')?.value),epiDose:num(el('ev-epiDose')?.value),
+      dobutaDose:num(el('ev-dobutaDose')?.value),milriDose:num(el('ev-milriDose')?.value),
+      vasopressinDose:num(el('ev-vasopressinDose')?.value),dopaDose:num(el('ev-dopaDose')?.value)
+    };
+    const vis=calcVIS(f);
+    const sf={sofaResp:num(el('ev-sofaResp')?.value),sofaCoag:num(el('ev-sofaCoag')?.value),sofaHep:num(el('ev-sofaHep')?.value),sofaCardio:num(el('ev-sofaCardio')?.value),sofaNeuro:num(el('ev-sofaNeuro')?.value),sofaRenal:num(el('ev-sofaRenal')?.value)};
+    const sofa=calcSOFA(sf);
+    const ve=el('ev-vis');if(ve){ve.textContent=fmt(vis,1);ve.style.color=vis>40?'#B8000F':vis>20?'#A85000':'#1A7A4A';}
+    const se=el('ev-sofa');if(se){se.textContent=sofa;se.style.color=sofa>=10?'#B8000F':sofa>=6?'#A85000':'#1A7A4A';}
+    const va=el('ev-vis-alert');if(va){va.innerHTML=vis>40?abox('danger','VIS >40 — soporte masivo'):vis>20?abox('warn','VIS 20-40 — monitoreo estrecho'):'';}
+    const sa=el('ev-sofa-alert');if(sa){sa.innerHTML=sofa>=10?abox('danger','SOFA ≥10 — mortalidad >50%'):sofa>=6?abox('warn','SOFA 6-9 — falla multiorgánica'):'';}
+    return{vis,sofa,f,sf};
+  }
+
+  function updateClAlerts(){
+    let h='';
+    const lac=num(el('ev-lac')?.value),map=num(el('ev-map')?.value);
+    if(lac>4)h+=abox('danger','🚨 Lactato crítico '+lac+' mmol/L');
+    else if(lac>2)h+=abox('warn','⚠ Lactato elevado '+lac+' mmol/L');
+    if(map>0&&map<65)h+=abox('warn','⚠ PAM <65 mmHg');
+    el('ev-cl-alerts').innerHTML=h;
+  }
+
+  el('ev-vaso').addEventListener('change',renderDrugFields);
+  ['ev-lac','ev-map'].forEach(id=>el(id)?.addEventListener('input',updateClAlerts));
+  SOFA.forEach(c=>el('ev-'+c.k)?.addEventListener('change',updateScores));
+  renderDrugFields();
+
+  el('ev-save').addEventListener('click',()=>{
+    const {vis,sofa,f}=updateScores();
+    const entry={
+      dia:el('ev-dia').value,lactato:el('ev-lac').value,troponina:el('ev-trop').value,
+      creatinina:el('ev-crea').value,diuresis:el('ev-diu').value,map:el('ev-map').value,
+      vm:el('ev-vm').value,vasopresores:el('ev-vaso').value,
+      norepiDose:el('ev-norepiDose')?.value||'',epiDose:el('ev-epiDose')?.value||'',
+      dobutaDose:el('ev-dobutaDose')?.value||'',milriDose:el('ev-milriDose')?.value||'',
+      vasopressinDose:el('ev-vasopressinDose')?.value||'',dopaDose:el('ev-dopaDose')?.value||'',
+      sofaResp:el('ev-sofaResp')?.value||'0',sofaCoag:el('ev-sofaCoag')?.value||'0',
+      sofaHep:el('ev-sofaHep')?.value||'0',sofaCardio:el('ev-sofaCardio')?.value||'0',
+      sofaNeuro:el('ev-sofaNeuro')?.value||'0',sofaRenal:el('ev-sofaRenal')?.value||'0',
+      notas:el('ev-notas').value,vis,sofa,savedAt:ts()
+    };
+    patients=patients.map(p=>p.id===selectedId?{...p,evolutions:[...(p.evolutions||[]),entry]}:p);
+    savePts();renderEvolution();
+  });
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────────────
+function renderDashboard(){
+  const pt=getPt();if(!pt){render(noPatientHtml());return}
+  const firstLab=pt.labs?.[0]||{},lastLab=pt.labs?.length?pt.labs[pt.labs.length-1]:{};
+  const lastGas=pt.gases?.length?pt.gases[pt.gases.length-1]:{};
+  const lastEvo=pt.evolutions?.length?pt.evolutions[pt.evolutions.length-1]:{};
+  const lastBal=pt.balances?.length?pt.balances[pt.balances.length-1]:{};
+  const idx=labIdx(firstLab.neutrofilos,firstLab.linfocitos,firstLab.plaquetas);
+  const hb=lastGas.hb||lastLab.hb||'';
+  const hm=hb?calcHemo({...lastGas,hb},pt):null;
+  const ip=lastGas.lactato||lastGas.scvo2?interpGas(lastGas):null;
+  const balAcum=(pt.balances||[]).reduce((s,b)=>s+(b.balance||0),0);
+
+  const alerts=[];
+  if(idx.sii>1000)alerts.push({t:'danger',m:'SII crítico D0: '+fmt(idx.sii,0)});
+  if(num(lastLab.lactato)>4)alerts.push({t:'danger',m:'Lactato crítico: '+lastLab.lactato+' mmol/L'});
+  else if(num(lastLab.lactato)>2)alerts.push({t:'warn',m:'Lactato elevado: '+lastLab.lactato+' mmol/L'});
+  if(lastLab.mdrd&&lastLab.mdrd<30)alerts.push({t:'danger',m:'TFG crítica: '+fmt(lastLab.mdrd,0)+' mL/min'});
+  if(num(lastLab.hb)<8&&lastLab.hb)alerts.push({t:'danger',m:'Hb crítica: '+lastLab.hb+' g/dL'});
+  if(hm?.ero2>35)alerts.push({t:'danger',m:'ERO₂ crítica: '+fmt(hm.ero2,1)+'%'});
+  if(hm?.ic&&hm.ic<1.8)alerts.push({t:'danger',m:'IC bajo: '+fmt(hm.ic,2)+' L/min/m²'});
+  if(hm?.do2i&&hm.do2i<450)alerts.push({t:'warn',m:'DO₂i insuficiente: '+fmt(hm.do2i,0)});
+  if(ip&&ip.pc!=='#1A7A4A')alerts.push({t:ip.pc==='#B8000F'?'danger':'warn',m:ip.perfil});
+  if(lastEvo.vis>40)alerts.push({t:'danger',m:'VIS elevado: '+fmt(lastEvo.vis,1)});
+  if(lastEvo.sofa>=10)alerts.push({t:'danger',m:'SOFA ≥10 — mortalidad >50%'});
+  if(num(lastEvo.map)<65&&num(lastEvo.map)>0)alerts.push({t:'warn',m:'PAM baja: '+lastEvo.map+' mmHg'});
+  if(balAcum>2000)alerts.push({t:'danger',m:'Balance acumulado >2L: '+Math.round(balAcum)+' mL'});
+
+  const counts=[
+    pt.labs?.length&&'Lab ×'+pt.labs.length,
+    pt.gases?.length&&'Gases ×'+pt.gases.length,
+    pt.drugLogs?.length&&'Drogas ×'+pt.drugLogs.length,
+    pt.atbList?.length&&'ATB ×'+pt.atbList.length,
+    pt.balances?.length&&'Bal ×'+pt.balances.length,
+    pt.evolutions?.length&&'Evo ×'+pt.evolutions.length,
+  ].filter(Boolean);
+
+  render(`
+  <div class="hero">
+    <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px">
+      <div>
+        <div style="font-size:22px;font-weight:700">${esc(pt.apellidos)}, ${esc(pt.nombres)}</div>
+        ${pt.ci?`<div style="font-size:13px;opacity:.8;margin-top:2px">CI: ${esc(pt.ci)}</div>`:''}
+        <div style="font-size:13px;opacity:.85;margin-top:6px">${pt.edad}a · ${pt.sexo} · <strong>${esc(pt.tipoCirugia)}</strong> · FEVI ${pt.fevi}% · ${pt.peso}kg${pt.sc?' · SC '+pt.sc+'m²':''}</div>
+        <div style="font-size:12px;opacity:.7;margin-top:3px">CEC ${pt.cec}' · Clamp Ao ${pt.clamp}' · UF ${pt.uf}mL · Ingreso: ${new Date(pt.createdAt).toLocaleDateString()}</div>
+        <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+          ${counts.map(c=>`<span style="background:rgba(255,255,255,.2);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:600">${c}</span>`).join('')}
+        </div>
+      </div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap;align-self:flex-start">
+        <button class="btn btn-sm" style="background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.4);color:#fff" onclick="selGo('${pt.id}','register')">✏ Editar</button>
+        ${['lab','gases','balance','atb','evolution'].map(t=>`<button class="btn btn-sm" style="background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);color:#fff" onclick="goTab('${t}')">${t.charAt(0).toUpperCase()+t.slice(1)}</button>`).join('')}
+      </div>
+    </div>
+  </div>
+
+  ${alerts.length?card('⚡ Alertas clínicas',alerts.map(a=>abox(a.t,a.m)).join(''),'','#B8000F'):''}
+
+  <div class="tg">
+    <div>
+      ${pt.labs?.length?card('Índices inflamatorios (1er lab)',`
+        <div class="g3" style="margin-bottom:10px">
+          ${sb('SII',fmt(idx.sii,0),'(N×P)/L',idx.sii>1000?'#B8000F':idx.sii>600?'#A85000':'#1A7A4A')}
+          ${sb('NLR',fmt(idx.nlr,2),'N/L',idx.nlr>6?'#B8000F':idx.nlr>3?'#A85000':'#1A7A4A')}
+          ${sb('PLR',fmt(idx.plr,0),'P/L',idx.plr>200?'#B8000F':idx.plr>150?'#A85000':'#1A7A4A')}
+        </div>
+        ${lastLab.mdrd?`<div class="g2">
+          ${sb('MDRD',fmt(lastLab.mdrd,0),'mL/min/1.73m²',lastLab.mdrd<30?'#B8000F':lastLab.mdrd<60?'#A85000':'#1A7A4A')}
+          ${sb('Hb',lastLab.hb||'—','g/dL',num(lastLab.hb)<8?'#B8000F':num(lastLab.hb)<10?'#A85000':'#1A7A4A')}
+        </div>`:''}
+      `,'','#A85000'):''}
+
+      ${(lastEvo.sofa!=null||lastEvo.vis!=null)?card('Última evolución',`
+        <div class="g4">
+          ${sb('SOFA',lastEvo.sofa??'-','',lastEvo.sofa>=10?'#B8000F':lastEvo.sofa>=6?'#A85000':'#1A7A4A','',true)}
+          ${sb('VIS',fmt(lastEvo.vis,1),'',lastEvo.vis>40?'#B8000F':lastEvo.vis>20?'#A85000':'#1A7A4A','',true)}
+          ${sb('PAM',lastEvo.map||'—','mmHg',num(lastEvo.map)<65&&num(lastEvo.map)>0?'#A85000':'#1A7A4A')}
+          ${sb('Diuresis',lastEvo.diuresis||'—','mL/24h')}
+        </div>
+      `,'','#1A7A4A'):''}
+
+      ${pt.balances?.length?card('Balance hídrico',`<div class="g2">
+        ${sb('Último balance',(lastBal.balance>=0?'+':'')+Math.round(lastBal.balance||0),'mL',lastBal.balance>1000?'#A85000':lastBal.balance<-500?'#B8000F':'#1A7A4A','',true)}
+        ${sb('Balance acumulado',(balAcum>=0?'+':'')+Math.round(balAcum),'mL',balAcum>2000?'#B8000F':balAcum>500?'#A85000':'#1A7A4A','',true)}
+      </div>`,'','#1A6FBF'):''}
+    </div>
+    <div>
+      ${hm?card('🫀 Fick — Hemodinámica',`
+        ${hm.gc?`<div style="background:${hm.pc==='#B8000F'?'#FDEBEC':hm.pc==='#A85000'?'#FEF3E2':'#E6F5EE'};border:2px solid ${hm.pc};border-radius:9px;padding:10px 14px;margin-bottom:10px;font-size:13px;font-weight:700;color:${hm.pc}">${hm.perfil}</div>`:''}
+        <div class="g2" style="margin-bottom:10px">
+          ${sb('GC',hm.gc?fmt(hm.gc,2):'—','L/min',hm.gc&&hm.gc<3.5?'#B8000F':hm.gc&&hm.gc<4.5?'#A85000':'#1A7A4A','',true)}
+          ${sb('IC',hm.ic?fmt(hm.ic,2):'—','L/min/m²',hm.ic&&hm.ic<1.8?'#B8000F':hm.ic&&hm.ic<2.2?'#A85000':'#1A7A4A','Normal >2.2',true)}
+        </div>
+        <div class="g2">
+          ${sb('DO₂',hm.do2?fmt(hm.do2,0):'—','mL O₂/min',hm.do2&&hm.do2<500?'#B8000F':'#1A7A4A')}
+          ${sb('ERO₂',hm.ero2?fmt(hm.ero2,1)+'%':'—','',hm.ero2>35?'#B8000F':hm.ero2>30?'#A85000':'#1A7A4A')}
+        </div>
+      `,'','#1A6FBF'):''}
+
+      ${ip?card('Perfil gasométrico',`
+        <div style="background:${ip.pc==='#B8000F'?'#FDEBEC':ip.pc==='#A85000'?'#FEF3E2':'#E6F5EE'};border:2px solid ${ip.pc};border-radius:9px;padding:10px 14px;margin-bottom:10px;font-size:13px;font-weight:700;color:${ip.pc}">${ip.perfil}</div>
+        <div class="g3">
+          ${sb('ΔP CO₂',lastGas.pvco2&&lastGas.paco2?fmt(ip.dpco2,1):'—','mmHg',ip.dpco2>10?'#B8000F':ip.dpco2>6?'#A85000':'#1A7A4A')}
+          ${sb('ScvO₂',lastGas.scvo2||'—','%',num(lastGas.scvo2)<60?'#B8000F':num(lastGas.scvo2)<70?'#A85000':'#1A7A4A')}
+          ${sb('P/F',lastGas.fio2?fmt(ip.pf,0):'—','',ip.pf<200?'#B8000F':ip.pf<300?'#A85000':'#1A7A4A')}
+        </div>
+      `,'','#1A6FBF'):''}
+
+      ${pt.atbList?.length?card('ATB activos',pt.atbList.map(a=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #DDE3EE">
+          <div><span style="color:#1A6FBF;font-weight:700">${esc(a.name)}</span><span style="font-size:12px;color:#8896B0;margin-left:8px">${esc(a.startDay)}</span></div>
+          ${a.needsAdj?chip('Ajuste renal','#B8000F'):''}
+        </div>`).join(''),'','#A85000'):''}
+    </div>
+  </div>`);
+}
+
+// ── EXPORT ────────────────────────────────────────────────────────────
+function renderExport(){
+  const acum=pt=>((pt.balances||[]).reduce((s,b)=>s+(b.balance||0),0));
+  const prev=patients.length?card('Vista previa',`<div style="overflow-x:auto"><table>
+    <tr><th>Paciente</th><th>GC</th><th>IC</th><th>SOFA</th><th>VIS</th><th>Bal acum</th><th>ATB</th></tr>
+    ${patients.map(p=>{
+      const le=p.evolutions?.[p.evolutions.length-1]||{};
+      const lg=p.gases?.[p.gases.length-1]||{};const ll=p.labs?.[p.labs.length-1]||{};
+      const hb=lg.hb||ll.hb||'';const hm=hb?calcHemo({...lg,hb},p):null;
+      const ba=acum(p);
+      return`<tr>
+        <td><div style="font-weight:600">${esc(p.apellidos)}, ${esc(p.nombres)}</div><div style="font-size:11px;color:#8896B0">${esc(p.ci||p.id.slice(0,8))}</div></td>
+        <td style="color:${hm?.gc&&hm.gc<3.5?'#B8000F':hm?.gc&&hm.gc<4.5?'#A85000':'inherit'};font-weight:700">${hm?.gc?fmt(hm.gc,1):'—'}</td>
+        <td style="color:${hm?.ic&&hm.ic<1.8?'#B8000F':hm?.ic&&hm.ic<2.2?'#A85000':'inherit'};font-weight:700">${hm?.ic?fmt(hm.ic,2):'—'}</td>
+        <td style="color:${le.sofa>=10?'#B8000F':le.sofa>=6?'#A85000':'inherit'};font-weight:700">${le.sofa??'—'}</td>
+        <td style="color:${le.vis>40?'#B8000F':'inherit'};font-weight:700">${le.vis!=null?fmt(le.vis,1):'—'}</td>
+        <td style="color:${ba>2000?'#B8000F':ba>500?'#A85000':'inherit'}">${Math.round(ba)}</td>
+        <td style="font-size:11px;color:#8896B0">${p.atbList?.length||0}</td>
+      </tr>`;
+    }).join('')}
+  </table></div>`):'';
+
+  render(`
+  ${card('Exportar datos',`
+    <div style="color:#4A5568;font-size:13px;margin-bottom:14px">${patients.length} paciente(s) en base local</div>
+    <div class="g3" style="gap:10px;margin-bottom:10px">
+      <div><button class="btn btn-fill btn-full" id="ex-csv" ${!patients.length?'disabled':''}>⬇ CSV</button><div style="font-size:11px;color:#8896B0;margin-top:5px;text-align:center">SPSS · Stata</div></div>
+      <div><button class="btn btn-green btn-full" id="ex-xlsx" ${!patients.length?'disabled':''}>⬇ Excel</button><div style="font-size:11px;color:#8896B0;margin-top:5px;text-align:center">5 hojas + Fick</div></div>
+      <div><button class="btn btn-yellow btn-full" id="ex-json" ${!patients.length?'disabled':''}>⬇ JSON</button><div style="font-size:11px;color:#8896B0;margin-top:5px;text-align:center">Backup</div></div>
+    </div>
+  `,'','#1A7A4A')}
+  ${card('Importar backup',`
+    <label style="display:block;background:#F0F3FA;border:2px dashed #DDE3EE;border-radius:10px;padding:18px;text-align:center;cursor:pointer;color:#8896B0;font-size:13px">
+      📂 Seleccionar archivo JSON
+      <input type="file" id="ex-import" accept=".json" style="display:none"/>
+    </label>
+    <div id="ex-msg"></div>
+  `)}
+  ${prev}
+  <button class="btn btn-outline btn-full" id="ex-clear" style="color:#B8000F;border-color:#B8000F;margin-top:10px" ${!patients.length?'disabled':''}>🗑 Vaciar base de datos</button>`);
+
+  el('ex-csv')?.addEventListener('click',()=>{
+    const rows=patients.map(buildRow);
+    const h=Object.keys(rows[0]);
+    dl([h.join(','),...rows.map(r=>h.map(k=>`"${String(r[k]??'').replace(/"/g,'""')}"`).join(','))].join('\n'),`UCI_CARDIO_${today()}.csv`,'text/csv');
+  });
+  el('ex-xlsx')?.addEventListener('click',exportXLSX);
+  el('ex-json')?.addEventListener('click',()=>{
+    dl(JSON.stringify(patients,null,2),`UCI_DB_${today()}.json`,'application/json');
+  });
+  el('ex-import')?.addEventListener('change',function(){
+    const f=this.files?.[0];if(!f)return;
+    const r=new FileReader();
+    r.onload=ev=>{
+      try{const d=JSON.parse(ev.target.result);if(!Array.isArray(d))throw 0;
+        if(!confirm('Importar '+d.length+' pacientes?'))return;
+        const ids=new Set(patients.map(p=>p.id));
+        patients=[...patients,...d.filter(p=>!ids.has(p.id))];
+        savePts();el('ex-msg').innerHTML=abox('ok','✓ '+d.length+' pacientes importados.');
+      }catch{el('ex-msg').innerHTML=abox('danger','✗ Error al leer el archivo.');}
+    };
+    r.readAsText(f);this.value='';
+  });
+  el('ex-clear')?.addEventListener('click',()=>{
+    if(!confirm('¿Vaciar toda la base de datos?'))return;
+    patients=[];savePts();renderExport();
+  });
+}
+
+function buildRow(p){
+  const l0=p.labs?.[0]||{},ll=p.labs?.[p.labs.length-1]||{};
+  const idx=labIdx(l0.neutrofilos,l0.linfocitos,l0.plaquetas);
+  const le=p.evolutions?.[p.evolutions.length-1]||{};
+  const balAcum=(p.balances||[]).reduce((s,b)=>s+(b.balance||0),0);
+  const lg=p.gases?.[p.gases.length-1]||{};const hb=lg.hb||ll.hb||'';
+  const hm=hb?calcHemo({...lg,hb},p):null;
+  return{ID:p.id,CI:p.ci||'',Apellidos:p.apellidos,Nombres:p.nombres,Edad:p.edad,Sexo:p.sexo,
+    Cirugia:p.tipoCirugia,FEVI:p.fevi,Peso:p.peso,SC:p.sc||'',CEC:p.cec,Clamp:p.clamp,UF:p.uf,
+    Hb:ll.hb||'',SII:idx.sii?+fmt(idx.sii,0):'',NLR:idx.nlr?+fmt(idx.nlr,2):'',
+    Lac_D0:l0.lactato||'',Crea_D0:l0.creatinina||'',MDRD:ll.mdrd||'',
+    GC_Fick:hm?.gc?+fmt(hm.gc,2):'',IC_Fick:hm?.ic?+fmt(hm.ic,2):'',
+    DO2:hm?.do2?+fmt(hm.do2,0):'',ERO2:hm?.ero2?+fmt(hm.ero2,1):'',
+    SOFA_ult:le.sofa??'',VIS_ult:le.vis!=null?+fmt(le.vis,1):'',
+    BalAcum:Math.round(balAcum),ATB:(p.atbList||[]).map(a=>a.n).join('|'),
+    Fecha:new Date(p.createdAt).toLocaleDateString()};
+}
+
+function exportXLSX(){
+  // Simple XLSX using CSV with BOM (Excel compatible)
+  const rows=patients.map(buildRow);
+  const h=Object.keys(rows[0]);
+  const csv='\uFEFF'+[h.join(','),...rows.map(r=>h.map(k=>`"${String(r[k]??'').replace(/"/g,'""')}"`).join(','))].join('\n');
+  dl(csv,`UCI_CARDIO_${today()}.xlsx`,'application/vnd.ms-excel;charset=utf-8');
+}
+
+function dl(c,n,t){const b=new Blob([c],{type:t});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=n;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
+
+// ── ATTACH EVENTS ─────────────────────────────────────────────────────
+function attachEvents(){}  // Events attached inline in each render
+
+// ── INIT ──────────────────────────────────────────────────────────────
+setupNav();
+renderTab();
+
+// ── SERVICE WORKER ────────────────────────────────────────────────────
+if('serviceWorker' in navigator){
+  const sw=`const C='uci-v6';const A=['${location.href}'];
+  self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(A).catch(()=>{})));self.skipWaiting();});
+  self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C).map(k=>caches.delete(k)))));self.clients.claim();});
+  self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).then(res=>{if(res&&res.status===200){const cl=res.clone();caches.open(C).then(c=>c.put(e.request,cl));}return res;}).catch(()=>r)));});`;
+  const blob=new Blob([sw],{type:'text/javascript'});
+  navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
+}
+</script>
+</body>
+</html>
